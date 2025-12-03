@@ -1,0 +1,38 @@
+#include "resource.h"
+
+IDR_MYMENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        POPUP "&New"
+        BEGIN
+            MENUITEM "&Cube", ID_FILE_NEW_CUBE
+        END
+        POPUP "&Record"
+        BEGIN
+            MENUITEM "&10 Seconds", ID_FILE_RECORD_TEN
+            MENUITEM "&15 Seconds", ID_FILE_RECORD_FIFTEEN
+            MENUITEM "&30 Seconds", ID_FILE_RECORD_THIRTY
+        END
+        MENUITEM "&Play", ID_FILE_PLAY
+        MENUITEM "E&xit", ID_FILE_EXIT
+    END
+
+    POPUP "&Stuff"
+    BEGIN
+        MENUITEM "&Go", ID_STUFF_GO
+        MENUITEM "G&o somewhere else", 0, GRAYED
+    END
+END
+
+IDI_MYICON ICON "computerscreen.ico"
+
+IDD_MYDIALOG DIALOG 20, 20, 200, 100
+// STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Make a Cube?"
+BEGIN
+    // DEFPUSHBUTTON "OK", IDOK, 150, 80, 40, 14
+    // PUSHBUTTON "Cancel", IDCANCEL, 100, 80, 40, 14
+    LTEXT "Enter text:", IDC_STATIC, 10, 10, 50, 10
+    // EDITTEXT IDC_EDIT1, 60, 10, 130, 14, WS_BORDER
+END
