@@ -27,11 +27,10 @@ void Playback::startRecord(int duration) {
 }
 
 void Playback::startRecord(const std::string& name, int duration) {
-    using namespace std::chrono;
-
     int durInMS = duration * 1000;
     outFile.open("../recordings/" + name + ".rndr");
     if (!outFile.is_open()) return;
+    
     startTime = currentTimeMillis();
     endTime = startTime + durInMS;
     outFile << durInMS << '\n';
@@ -42,7 +41,6 @@ void Playback::endRecord() {
 }
 
 bool Playback::recording() {
-    using namespace std::chrono;
     if (currentTimeMillis() >= endTime) {
         endRecord();
         return false;
