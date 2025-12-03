@@ -142,31 +142,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             switch (wParam) {
                 case VK_UP:
                     windowStuff.wireFrames[0].updateLocation({0, -10, 0});
-//                    windowStuff.playback.update(windowStuff.wireFrames[0]);
                     break;
                 case VK_DOWN:
                     windowStuff.wireFrames[0].updateLocation({0, 10, 0});
-//                    windowStuff.playback.update(windowStuff.wireFrames[0]);
                     break;
                 case VK_LEFT:
                     windowStuff.wireFrames[0].updateLocation({-10, 0, 0});
-//                    windowStuff.playback.update(windowStuff.wireFrames[0]);
                     break;
                 case VK_RIGHT:
                     windowStuff.wireFrames[0].updateLocation({10, 0, 0});
-//                    windowStuff.playback.update(windowStuff.wireFrames[0]);
                     break;
                 case 88: // X
                     windowStuff.wireFrames[0].toggleRotation(rotateX);
-//                    windowStuff.playback.update(windowStuff.wireFrames[0]);
                     break;
                 case 89: // Y
                     windowStuff.wireFrames[0].toggleRotation(rotateY);
-//                    windowStuff.playback.update(windowStuff.wireFrames[0]);
                     break;
                 case 90: // Z
                     windowStuff.wireFrames[0].toggleRotation(rotateZ);
-//                    windowStuff.playback.update(windowStuff.wireFrames[0]);
                     break;
                 default:
                     std::cout << wParam << '\n';
