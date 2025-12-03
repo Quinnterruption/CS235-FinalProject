@@ -14,14 +14,29 @@ struct WindowStuff {
     WindowBuffer windowBuffer = {};
     std::vector<WireFrame> wireFrames = {};
     Playback playback;
+    HWND hwnd;
 };
 
 WindowStuff windowStuff;
 RECT rect = {};
+WireFrame prevWireFrame = {};
 
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
 int width, height;
-const char g_szClassName[] = "myWindowClass";
+constexpr char g_szClassName[] = "myWindowClass";
+
+void bubbleSort(std::array<coord, 8>& toSort, int idx = 0) {
+    bool sorted = false;
+    while (!sorted) {
+        sorted = true;
+        for (int i = 0; i < toSort.size() - 1; i++) {
+            if (toSort[i][idx] > toSort[i + 1][idx]) {
+                std::swap(toSort[i], toSort[i + 1]);
+                sorted = false;
+            }
+        }
+    }
+}
 
 void onIdle(int w, int h, WindowBuffer& windowBuffer) {
     windowBuffer.clear();
@@ -33,7 +48,6 @@ void onIdle(int w, int h, WindowBuffer& windowBuffer) {
         }
     }
     */
-
     for (WireFrame& wireFrame : windowStuff.wireFrames) {
         windowBuffer.drawCube(wireFrame);
         wireFrame.rotate();
@@ -41,6 +55,19 @@ void onIdle(int w, int h, WindowBuffer& windowBuffer) {
             windowStuff.playback.update(wireFrame);
         }
     }
+    if (prevWireFrame != windowStuff.wireFrames[0] || windowStuff.wireFrames[0].getRotation() > 0) {
+        std::array<coord, 8> toSort = windowStuff.wireFrames[0].coordinates;
+        bubbleSort(toSort, 2);
+        bubbleSort(toSort, 1);
+        bubbleSort(toSort, 0);
+
+        std::array<int, 2> projectedCursor = windowStuff.windowBuffer.projectionMap(toSort[0]);
+        POINT pt = {projectedCursor[0], projectedCursor[1]};
+
+        ClientToScreen(windowStuff.hwnd, &pt);
+        SetCursorPos(pt.x, pt.y);
+    }
+    prevWireFrame = windowStuff.wireFrames[0];
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -49,6 +76,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             GetClientRect(hwnd, &rect);
             height = rect.bottom;
             width = rect.right;
+            std::cout << height << '\n';
+            std::cout << width << '\n';
             resetWindowBuffer(&windowStuff.windowBuffer, &windowStuff.bitmapInfo, hwnd);
             break;
         }
@@ -140,6 +169,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_KEYDOWN: {
             switch (wParam) {
+                case VK_ESCAPE:
+                    if (MessageBox(hwnd, "Quit the program?", "WARNING!", MB_YESNO) == IDYES) {
+                        windowStuff.running = false;
+                    }
+                    break;
                 case VK_UP:
                     windowStuff.wireFrames[0].updateLocation({0, -10, 0});
                     break;
@@ -224,6 +258,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             nullptr, nullptr, hInstance, nullptr
             );
 
+    windowStuff.hwnd = hwnd;
     resetWindowBuffer(&windowStuff.windowBuffer, &windowStuff.bitmapInfo, hwnd);
 
     if (hwnd == nullptr) {
@@ -233,10 +268,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
-
-    GetClientRect(hwnd, &rect);
-    height = rect.bottom;
-    width = rect.right;
 
     Playback::replay(hwnd, windowStuff.windowBuffer, lpCmdLine);
 

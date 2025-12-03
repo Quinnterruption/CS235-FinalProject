@@ -52,6 +52,8 @@ struct WindowBuffer {
         }
     }
 
+    array<int, 2> projectionMap(const coord& toMap) const;
+
     /**
      * Draws a square between four points
      * @param first point
@@ -75,7 +77,7 @@ struct WindowBuffer {
      * Calculates the projection mapping and renders a given WireFrame as a cube
      * @param cube the WireFrame to render
      */
-    void drawCube(WireFrame cube);
+    void drawCube(const WireFrame& cube);
 
 //    void drawLine(int x1, int y1, int x2, int y2) {
 //        int dx = abs(x2 - x1);

@@ -76,7 +76,29 @@ void WindowBuffer::drawSquare(array<int, 2> first, array<int, 2> second, array<i
     drawLine(fourth[0], fourth[1], first[0], first[1]);
 }
 
-void WindowBuffer::drawCube(WireFrame cube) {
+array<int, 2> WindowBuffer::projectionMap(const coord& toMap) const {
+    /* 3d Projection to 2d Plane */
+    // Find the middle of the current window
+    double midScreenX = (w / 2.0);
+    double midScreenY = (h / 2.0);
+    // Calculate the distance from the focal point to the screen
+    double distToScreen = midScreenX / tan(FOV * M_PI / 360.0);
+
+    // Calculate the x and y shift with the offset positions
+    double xShift = abs(toMap[0] - midScreenX) * (toMap[2] - distToScreen);
+    double yShift = abs(toMap[1] - midScreenY) * (toMap[2] - distToScreen);
+
+    if (toMap[2] > 0) {    // Prevent division by 0
+        xShift /= toMap[2];
+        yShift /= toMap[2];
+    }
+
+    int projectedX = (toMap[0] < midScreenX) ? toMap[0] + xShift : toMap[0] - xShift;
+    int projectedY = (toMap[1] < midScreenY) ? toMap[1] + yShift : toMap[1] - yShift;
+    return {projectedX, projectedY};
+}
+
+void WindowBuffer::drawCube(const WireFrame &cube) {
     // Check for entire object being behind the focal point
     bool render = false;
     for (coord point : cube.coordinates) {
@@ -88,38 +110,10 @@ void WindowBuffer::drawCube(WireFrame cube) {
     // Skips drawing if entire object is behind the focal point
     if (!render) return;
 
-    /* 3d Projection to 2d Plane */
-    // Find the middle of the current window
-    double midScreenX = (w / 2.0);
-    double midScreenY = (h / 2.0);
-    // Calculate the distance from the focal point to the screen
-    double distToScreen = midScreenX / tan(FOV * M_PI / 360.0);
-    // Create an array for the shifted coordinates
     array<array<int, 2>, 8> projected = {};
     for (int i = 0; i < 8; i++) {
-        double x = cube.coordinates[i][0];
-        double y = cube.coordinates[i][1];
-        double z = cube.coordinates[i][2];
+        projected[i] = projectionMap(cube.coordinates[i]);
 
-        // Offset the coordinates by the middle of the screen
-        x -= midScreenX;
-        y -= midScreenY;
-
-        double xShift = abs(x) * (z - distToScreen);
-        double yShift = abs(y) * (z - distToScreen);
-
-        if (z > 0) {    // Prevent division by 0
-            xShift /= z;
-            yShift /= z;
-        }
-
-        x += midScreenX;
-        y += midScreenY;
-
-        int projectedX = (x < midScreenX) ? x + xShift : x - xShift;
-        int projectedY = (y < midScreenY) ? y + yShift : y - yShift;
-
-        projected[i] = {projectedX, projectedY};
     }
 
     // Draw the top and bottom portions of the cube
