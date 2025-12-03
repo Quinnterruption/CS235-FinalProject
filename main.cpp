@@ -173,14 +173,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
-        case WM_RBUTTONDOWN: {
-            windowStuff.wireFrames[0].updateLocation({0, 0, 100});
-//            windowStuff.playback.update(windowStuff.wireFrames[0]);
-            break;
-        }
-        case WM_LBUTTONDOWN: {
-            windowStuff.wireFrames[0].updateLocation({0, 0, -100});
-//            windowStuff.playback.update(windowStuff.wireFrames[0]);
+        case WM_MOUSEWHEEL: {
+            short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+            if (delta > 0) {
+                windowStuff.wireFrames[0].updateLocation({0, 0, -20});
+            }
+            if (delta < 0) {
+                windowStuff.wireFrames[0].updateLocation({0, 0, 20});
+            }
             break;
         }
         case WM_CLOSE:
