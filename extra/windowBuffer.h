@@ -16,6 +16,14 @@ struct WindowBuffer {
     int w = 0;
     int h = 0;
 
+    /**
+     * Adds a point and it's color to the memory buffer to be rendered
+     * @param x coordinate
+     * @param y coordinate
+     * @param r red value 0-255
+     * @param g green value 0-255
+     * @param b blue value 0-255
+     */
     void drawAtSafe(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
         if (x >= w || y >= h || x < 0 || y < 0) {
             return;
@@ -27,6 +35,12 @@ struct WindowBuffer {
         memory[4 * (x + y * w) + 3] = 0;
     }
 
+    /**
+     * Assigns the entire memory buffer to the chosen color
+     * @param r red value 0-255
+     * @param g green value 0-255
+     * @param b blue value 0-255
+     */
     void clear(unsigned char r = 0, unsigned char g = 0, unsigned char b = 0) {
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
@@ -38,8 +52,29 @@ struct WindowBuffer {
         }
     }
 
+    /**
+     * Draws a square between four points
+     * @param first point
+     * @param second point
+     * @param third point
+     * @param fourth point
+     */
     void drawSquare(array<int, 2> first, array<int, 2> second, array<int, 2> third, array<int, 2> fourth);
+
+    /**
+     * Draws a line between two points
+     * @param x1 coordinate
+     * @param y1 coordinate
+     * @param x2 coordinate
+     * @param y2 coordinate
+     */
     void drawLine(int x1, int y1, int x2, int y2);
+
+    /**
+     * Projection mapping calculation needs to be moved to a different function
+     * Calculates the projection mapping and renders a given WireFrame as a cube
+     * @param cube the WireFrame to render
+     */
     void drawCube(WireFrame cube);
 
 //    void drawLine(int x1, int y1, int x2, int y2) {
@@ -69,6 +104,9 @@ struct WindowBuffer {
 
 /**
  * Clears and reallocates the windowBuffer memory
+ * @param windowBuffer the current windowBuffer to reset
+ * @param bitmapInfo the configuration for the WIN32 buffer
+ * @param hwnd the current window
  */
 void resetWindowBuffer(WindowBuffer* windowBuffer, BITMAPINFO* bitmapInfo, HWND hwnd);
 
