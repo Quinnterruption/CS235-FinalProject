@@ -21,9 +21,9 @@ WindowStuff windowStuff;
 RECT rect = {};
 WireFrame prevWireFrame = {};
 
+constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
-int width, height;
-constexpr char g_szClassName[] = "myWindowClass";
+int windowWidth, windowHeight;
 
 void bubbleSort(std::array<coord, 8>& toSort, int idx = 0) {
     bool sorted = false;
@@ -48,6 +48,7 @@ void onIdle(int w, int h, WindowBuffer& windowBuffer) {
         }
     }
     */
+    // Iterate over all WireFrames, draw to screen, rotate, and record updates
     for (WireFrame& wireFrame : windowStuff.wireFrames) {
         windowBuffer.drawCube(wireFrame);
         wireFrame.rotate();
@@ -70,15 +71,18 @@ void onIdle(int w, int h, WindowBuffer& windowBuffer) {
     prevWireFrame = windowStuff.wireFrames[0];
 }
 
+// Win32 function for event handling
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
+        // Resize window handling
         case WM_SIZE: {
             GetClientRect(hwnd, &rect);
-            height = rect.bottom;
-            width = rect.right;
+            windowHeight = rect.bottom;
+            windowWidth = rect.right;
             resetWindowBuffer(&windowStuff.windowBuffer, &windowStuff.bitmapInfo, hwnd);
             break;
         }
+        // Redraw window handling
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC DeviceContext = BeginPaint(hwnd, &ps);
@@ -88,10 +92,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             StretchDIBits(hdc,
                           0, 0, windowStuff.windowBuffer.w, windowStuff.windowBuffer.h,
                           0, 0, windowStuff.windowBuffer.w, windowStuff.windowBuffer.h,
-                          windowStuff.windowBuffer.memory,
-                          &windowStuff.bitmapInfo,
-                          DIB_RGB_COLORS,
-                          SRCCOPY
+                          windowStuff.windowBuffer.memory, &windowStuff.bitmapInfo,
+                          DIB_RGB_COLORS, SRCCOPY
                           );
 
             ReleaseDC(hwnd, hdc);
@@ -100,36 +102,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         /* Doesn't Work Right
-         */
-//        case WM_CREATE: {
-//            HMENU hMenu, hSubMenu;
-//            HICON hIcon, hIconSm;
-//
-//            hMenu = CreateMenu();
-//            AppendMenu(hSubMenu, MF_STRING, ID_FILE_EXIT, "E&xit");
-//            AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hSubMenu, "&File");
-//
-//            hSubMenu = CreatePopupMenu();
-//            AppendMenu(hSubMenu, MF_STRING, ID_STUFF_GO, "&Go");
-//            AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hSubMenu, "&Stuff");
-//
-//            SetMenu(hwnd, hMenu);
-//
-//            hIcon = LoadImage(NULL, "menu_two.ico", IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
-//            if (hIcon) {
-//                SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-//            } else {
-//                MessageBox(hwnd, "Could not load large icon!", "Error", MB_OK | MB_ICONERROR);
-//            }
-//
-//            hIconSm = LoadImage(NULL, "menu_two.ico", IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
-//            if (hIconSm) {
-//                SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
-//            } else {
-//                MessageBox(hwnd, "Could not load small icon!", "Error", MB_OK | MB_ICONERROR);
-//            }
-//            break;
-//        }
+        case WM_CREATE: {
+            HMENU hMenu, hSubMenu;
+            HICON hIcon, hIconSm;
+
+            hMenu = CreateMenu();
+            AppendMenu(hSubMenu, MF_STRING, ID_FILE_EXIT, "E&xit");
+            AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hSubMenu, "&File");
+
+            hSubMenu = CreatePopupMenu();
+            AppendMenu(hSubMenu, MF_STRING, ID_STUFF_GO, "&Go");
+            AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hSubMenu, "&Stuff");
+
+            SetMenu(hwnd, hMenu);
+
+            hIcon = LoadImage(NULL, "menu_two.ico", IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
+            if (hIcon) {
+                SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            } else {
+                MessageBox(hwnd, "Could not load large icon!", "Error", MB_OK | MB_ICONERROR);
+            }
+
+            hIconSm = LoadImage(NULL, "menu_two.ico", IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
+            if (hIconSm) {
+                SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+            } else {
+                MessageBox(hwnd, "Could not load small icon!", "Error", MB_OK | MB_ICONERROR);
+            }
+            break;
+        }
+        */
+        // Menu bar handling
         case WM_COMMAND: {
             switch(LOWORD(wParam)) {
                 case ID_FILE_NEW_CUBE: {
@@ -149,22 +152,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     windowStuff.playback.startRecord(30);
                     break;
                 }
+                /* Does nothing currently
                 case ID_FILE_PLAY: {
                     break;
                 }
+                */
                 case ID_FILE_EXIT:
                     if (MessageBox(hwnd, "Are you sure?", "WARNING!", MB_YESNO) == IDYES) {
                         windowStuff.running = false;
                     }
-                    break;
-                case ID_STUFF_GO:
-                    //                    square.updateLocation({10, 10, 10});
                     break;
                 default:
                     std::cout << LOWORD(wParam) << '\n';
             }
             break;
         }
+        // Keyboard handling
         case WM_KEYDOWN: {
             switch (wParam) {
                 case VK_ESCAPE:
@@ -172,6 +175,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         windowStuff.running = false;
                     }
                     break;
+                // Cube movement cases up/down/left/right
                 case VK_UP:
                     windowStuff.wireFrames[0].updateLocation({0, -10, 0});
                     break;
@@ -184,6 +188,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case VK_RIGHT:
                     windowStuff.wireFrames[0].updateLocation({10, 0, 0});
                     break;
+                // Cube toggle rotations
                 case 88: // X
                     windowStuff.wireFrames[0].toggleRotation(rotateX);
                     break;
@@ -198,6 +203,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        // Scroll wheel handling
         case WM_MOUSEWHEEL: {
             short delta = GET_WHEEL_DELTA_WPARAM(wParam);
             if (delta > 0) {
@@ -221,13 +227,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    windowStuff.wireFrames.emplace_back(coord{580, 280, 500}, 100, 100, 100);
-
     WNDCLASSEX wc;
     HWND hwnd;
     MSG Msg;
 
-    // Step 1: Register Window Class
+    // Register Window Class
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.style = 0;
     wc.lpfnWndProc = WndProc;
@@ -239,17 +243,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wc.lpszMenuName = MAKEINTRESOURCE(IDR_MYMENU);
-    wc.lpszClassName = g_szClassName;
+    wc.lpszClassName = windowClassName;
 
     if (!RegisterClassEx(&wc)) {
         MessageBox(nullptr, "Window Registration Failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
         return 0;
     }
 
-    // Step 2: Create Window
+    // Create Window
     hwnd = CreateWindowEx(
             WS_EX_CLIENTEDGE,
-            g_szClassName,
+            windowClassName,
             "3D Renderer",
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT, START_WIDTH, START_HEIGHT,
@@ -269,13 +273,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     Playback::replay(hwnd, windowStuff.windowBuffer, lpCmdLine);
 
-    // Step 3: "Game" Loop
+    windowStuff.wireFrames.emplace_back(coord{580, 280, 500}, 100, 100, 100);
+    // "Game" Loop
     while (windowStuff.running) {
         if (PeekMessage(&Msg, hwnd, 0, 0, PM_REMOVE)) {
             TranslateMessage(&Msg);
             DispatchMessage(&Msg);
         } else {
-            onIdle(width, height, windowStuff.windowBuffer);
+            onIdle(windowWidth, windowHeight, windowStuff.windowBuffer);
             SendMessage(hwnd, WM_PAINT, 0, 0);
         }
     }
