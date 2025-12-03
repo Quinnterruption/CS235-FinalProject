@@ -2,12 +2,14 @@
 // Created by Quinn on 11/1/2025.
 //
 
-#ifndef FINALPROJECT_GAMEWINDOWBUFFER_H
-#define FINALPROJECT_GAMEWINDOWBUFFER_H
+#ifndef FINALPROJECT_WINDOWBUFFER_H
+#define FINALPROJECT_WINDOWBUFFER_H
 #include <Windows.h>
 #include "wireFrame.h"
 
-
+/**
+ * A struct to maintain a WindowBuffer and render certain objects
+ */
 struct WindowBuffer {
     unsigned char* memory = nullptr;
     int FOV = 90;
@@ -65,6 +67,9 @@ struct WindowBuffer {
 //    }
 };
 
+/**
+ * Clears and reallocates the windowBuffer memory
+ */
 void resetWindowBuffer(WindowBuffer* windowBuffer, BITMAPINFO* bitmapInfo, HWND hwnd);
 
-#endif //FINALPROJECT_GAMEWINDOWBUFFER_H
+#endif //FINALPROJECT_WINDOWBUFFER_H

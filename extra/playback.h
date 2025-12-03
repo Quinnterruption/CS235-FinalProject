@@ -12,7 +12,9 @@
 #include "wireFrame.h"
 #include "windowBuffer.h"
 
-
+/**
+ * A class to record updates within the environment and replay them
+ */
 class Playback {
     uint64_t startTime{};
     uint64_t endTime{};
