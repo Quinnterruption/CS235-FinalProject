@@ -76,8 +76,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             GetClientRect(hwnd, &rect);
             height = rect.bottom;
             width = rect.right;
-            std::cout << height << '\n';
-            std::cout << width << '\n';
             resetWindowBuffer(&windowStuff.windowBuffer, &windowStuff.bitmapInfo, hwnd);
             break;
         }
