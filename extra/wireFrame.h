@@ -151,6 +151,11 @@ enum rotationFlags {
  * A class to store and edit the WireFrame data
  */
 class WireFrame {
+    int rotateFlags = 0;
+    int width = 0;
+    int height = 0;
+    int depth = 0;
+
     /**
      * @return the origin of the WireFrame
      */
@@ -162,11 +167,6 @@ class WireFrame {
      * @return the resulting 3D matrix
      */
     static matrix3 matrixMult(const matrix3& first, const matrix3& second);
-
-    int rotateFlags = 0;
-    int length = 0;
-    int height = 0;
-    int depth = 0;
 public:
     coord midPoint;
     array<coord, 8> coordinates;
@@ -186,11 +186,11 @@ public:
     /**
      * Creates a WireFrame according to User specifications
      * @param topLeft the top left coordinate of the WireFrame
+     * @param width the width of the WireFrame
      * @param height the height of the WireFrame
-     * @param length the length of the WireFrame
      * @param depth the depth of the WireFrame
      */
-    WireFrame(const coord &topLeft, double height, double length, double depth);
+    WireFrame(const coord &topLeft, double width, double height, double depth);
 
     /* DEPRECATED
     friend std::ostream& operator << (std::ostream& os, const WireFrame& obj) {

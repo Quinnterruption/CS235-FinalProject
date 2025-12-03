@@ -87,26 +87,26 @@ WireFrame::WireFrame(const std::initializer_list<coord> init) {
         throw std::invalid_argument("Coordinates must have exactly 8 elements");
     }
     std::copy(init.begin(), init.end(), coordinates.begin());
-    length = abs(coordinates[0][0] - coordinates[1][0]);
+    width = abs(coordinates[0][0] - coordinates[1][0]);
     height = abs(coordinates[3][1] - coordinates[4][1]);
     depth = abs(coordinates[1][2] - coordinates[2][2]);
     midPoint = getOrigin();
 }
 
-WireFrame::WireFrame(const coord &topLeft, double height, double length, double depth) : length(length), height(height), depth(depth){
+WireFrame::WireFrame(const coord &topLeft, double width, double height, double depth) : width(width), height(height), depth(depth){
     for (coord& coordinate : coordinates) {
         coordinate = topLeft;
     }
-    coordinates[1] += {length, 0, 0};
-    coordinates[2] += {length, 0, depth};
+    coordinates[1] += {width, 0, 0};
+    coordinates[2] += {width, 0, depth};
     coordinates[3] += {0, 0, depth};
     coordinates[4] += {0, height, depth};
-    coordinates[5] += {length, height, depth};
-    coordinates[6] += {length, height, 0};
+    coordinates[5] += {width, height, depth};
+    coordinates[6] += {width, height, 0};
     coordinates[7] += {0, height, 0};
     midPoint = getOrigin();
 }
 
 bool WireFrame::operator==(const WireFrame &obj) const {
-    return length == obj.length && midPoint == obj.midPoint && rotateFlags == obj.rotateFlags;
+    return width == obj.width && midPoint == obj.midPoint && rotateFlags == obj.rotateFlags;
 }

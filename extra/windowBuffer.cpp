@@ -113,7 +113,6 @@ void WindowBuffer::drawCube(const WireFrame &cube) {
     array<array<int, 2>, 8> projected = {};
     for (int i = 0; i < 8; i++) {
         projected[i] = projectionMap(cube.coordinates[i]);
-
     }
 
     // Draw the top and bottom portions of the cube

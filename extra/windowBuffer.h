@@ -52,6 +52,11 @@ struct WindowBuffer {
         }
     }
 
+    /**
+     * Calculates the coordinates of a 3D point projected on a 2D plane
+     * @param toMap the 3D coordinate to project
+     * @return a 2D point with offset coordinates
+     */
     array<int, 2> projectionMap(const coord& toMap) const;
 
     /**
