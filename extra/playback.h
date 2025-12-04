@@ -68,7 +68,7 @@ public:
      * @param windowBuffer the current window's WindowBuffer
      * @param filePath the path of the file to read
      */
-    static void replay(HWND__ *hwnd, WindowBuffer &windowBuffer, const std::string& filePath);
+    static void replay(HWND__* hwnd, WindowBuffer& windowBuffer, std::string filePath);
 };
 
 
