@@ -76,6 +76,7 @@ matrix3 WireFrame::matrixMult(const matrix3& first, const matrix3& second) {
 }
 
 void WireFrame::updateLocation(const coord &amount) {
+    if (amount == coord{0, 0, 0}) return;
     for (int i = 0; i < 8; i++) {
         coordinates[i] += amount;
     }

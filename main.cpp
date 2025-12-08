@@ -15,6 +15,8 @@ struct WindowStuff {
     std::vector<WireFrame> wireFrames = {};
     Playback playback;
     HWND hwnd;
+    bool keyPressed[256] = {false};
+    bool keyPressedPrev[256] = {false};
 };
 
 WindowStuff windowStuff;
@@ -24,6 +26,8 @@ WireFrame prevWireFrame = {};
 constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
 int windowWidth, windowHeight;
+constexpr double moveAccel = 1.1f;
+double moveDistances[4];
 
 void bubbleSort(std::array<coord, 8>& toSort, int idx = 0) {
     bool sorted = false;
@@ -38,7 +42,38 @@ void bubbleSort(std::array<coord, 8>& toSort, int idx = 0) {
     }
 }
 
+void pressKeys() {
+    if (windowStuff.keyPressed[VK_ESCAPE]) {
+        if (MessageBox(windowStuff.hwnd, "Quit the program?", "WARNING!", MB_YESNO) == IDYES) {
+            windowStuff.running = false;
+        }
+    }
+    // Cube movement Left/Up/Right/Down
+    for (int i = 0; i < 4; i++) {
+        if (!windowStuff.keyPressedPrev[i + VK_LEFT]) moveDistances[i] = 1.0;
+        if (windowStuff.keyPressed[i + VK_LEFT]) {
+            windowStuff.keyPressedPrev[i + VK_LEFT] = true;
+            moveDistances[i] = std::min(8.0, moveDistances[i] * moveAccel);
+        }
+    }
+    windowStuff.wireFrames[0].updateLocation({moveDistances[2] - moveDistances[0], moveDistances[3] - moveDistances[1], 0});
+    // Cube rotation toggles
+    if (windowStuff.keyPressed['X'] && !windowStuff.keyPressedPrev['X']) {
+        windowStuff.keyPressedPrev['X'] = true;
+        windowStuff.wireFrames[0].toggleRotation(rotateX);
+    }
+    if (windowStuff.keyPressed['Y'] && !windowStuff.keyPressedPrev['Y']) {  // y
+        windowStuff.keyPressedPrev['Y'] = true;
+        windowStuff.wireFrames[0].toggleRotation(rotateY);
+    }
+    if (windowStuff.keyPressed['Z'] && !windowStuff.keyPressedPrev['Z']) {  // z
+        windowStuff.keyPressedPrev['Z'] = true;
+        windowStuff.wireFrames[0].toggleRotation(rotateZ);
+    }
+}
+
 void onIdle(int w, int h, WindowBuffer& windowBuffer) {
+    pressKeys();
     windowBuffer.clear();
 
     /*
@@ -169,38 +204,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         // Keyboard handling
         case WM_KEYDOWN: {
-            switch (wParam) {
-                case VK_ESCAPE:
-                    if (MessageBox(hwnd, "Quit the program?", "WARNING!", MB_YESNO) == IDYES) {
-                        windowStuff.running = false;
-                    }
-                    break;
-                // Cube movement cases up/down/left/right
-                case VK_UP:
-                    windowStuff.wireFrames[0].updateLocation({0, -10, 0});
-                    break;
-                case VK_DOWN:
-                    windowStuff.wireFrames[0].updateLocation({0, 10, 0});
-                    break;
-                case VK_LEFT:
-                    windowStuff.wireFrames[0].updateLocation({-10, 0, 0});
-                    break;
-                case VK_RIGHT:
-                    windowStuff.wireFrames[0].updateLocation({10, 0, 0});
-                    break;
-                // Cube toggle rotations
-                case 88: // X
-                    windowStuff.wireFrames[0].toggleRotation(rotateX);
-                    break;
-                case 89: // Y
-                    windowStuff.wireFrames[0].toggleRotation(rotateY);
-                    break;
-                case 90: // Z
-                    windowStuff.wireFrames[0].toggleRotation(rotateZ);
-                    break;
-                default:
-                    std::cout << wParam << '\n';
-            }
+            windowStuff.keyPressed[wParam] = true;
+            break;
+        }
+        case WM_KEYUP: {
+            windowStuff.keyPressed[wParam] = false;
+            windowStuff.keyPressedPrev[wParam] = false;
             break;
         }
         // Scroll wheel handling
