@@ -58,15 +58,15 @@ void pressKeys() {
     }
     windowStuff.wireFrames[0].updateLocation({moveDistances[2] - moveDistances[0], moveDistances[3] - moveDistances[1], 0});
     // Cube rotation toggles
-    if (windowStuff.keyPressed['X'] && !windowStuff.keyPressedPrev['X']) {
+    if (!windowStuff.keyPressedPrev['X'] && windowStuff.keyPressed['X']) {  // x
         windowStuff.keyPressedPrev['X'] = true;
         windowStuff.wireFrames[0].toggleRotation(rotateX);
     }
-    if (windowStuff.keyPressed['Y'] && !windowStuff.keyPressedPrev['Y']) {  // y
+    if (!windowStuff.keyPressedPrev['Y'] && windowStuff.keyPressed['Y']) {  // y
         windowStuff.keyPressedPrev['Y'] = true;
         windowStuff.wireFrames[0].toggleRotation(rotateY);
     }
-    if (windowStuff.keyPressed['Z'] && !windowStuff.keyPressedPrev['Z']) {  // z
+    if (!windowStuff.keyPressedPrev['Z'] && windowStuff.keyPressed['Z']) {  // z
         windowStuff.keyPressedPrev['Z'] = true;
         windowStuff.wireFrames[0].toggleRotation(rotateZ);
     }
