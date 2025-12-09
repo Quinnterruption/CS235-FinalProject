@@ -50,11 +50,14 @@ void pressKeys() {
             windowStuff.running = false;
         }
     }
+    // Reset wireFrame
     if (!windowStuff.keyPressedPrev['R'] && windowStuff.keyPressed['R']) {
         windowStuff.keyPressedPrev['R'] = true;
         windowStuff.wireFrames[0] = initWireFrame;
     }
     // Cube movement Left/Up/Right/Down
+    // VK_LEFT is the first of the arrow key macros in Win32
+    // This was designed this way to reduce the repetitive code
     for (int i = 0; i < 4; i++) {
         if (!windowStuff.keyPressedPrev[i + VK_LEFT]) moveDistances[i] = 1.0;
         if (windowStuff.keyPressed[i + VK_LEFT]) {
@@ -62,8 +65,10 @@ void pressKeys() {
             moveDistances[i] = std::min(1 + maxSpeed, moveDistances[i] * moveAccel);
         }
     }
+    // Update the cube location
     windowStuff.wireFrames[0].updateLocation({moveDistances[2] - moveDistances[0], moveDistances[3] - moveDistances[1], 0});
     // Cube rotation toggles
+    // This conditional ensures that the key isn't triggered more than once
     if (!windowStuff.keyPressedPrev['X'] && windowStuff.keyPressed['X']) {  // x
         windowStuff.keyPressedPrev['X'] = true;
         windowStuff.wireFrames[0].toggleRotation(rotateX);
@@ -97,6 +102,8 @@ void onIdle(int w, int h, WindowBuffer& windowBuffer) {
             windowStuff.playback.update(wireFrame);
         }
     }
+    // Find the topFrontLeft point on the cube and move the cursor to this position
+    // Only active if the wireFrame changes
     if (prevWireFrame != windowStuff.wireFrames[0] || windowStuff.wireFrames[0].getRotation() > 0) {
         std::array<coord, 8> toSort = windowStuff.wireFrames[0].coordinates;
         bubbleSort(toSort, 2);
