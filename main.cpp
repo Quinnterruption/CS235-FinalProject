@@ -26,7 +26,8 @@ WireFrame prevWireFrame = {};
 constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
 int windowWidth, windowHeight;
-constexpr double moveAccel = 1.1f;
+constexpr double moveAccel = 1.2f;
+constexpr double maxSpeed = 10.0f;
 double moveDistances[4];
 
 void bubbleSort(std::array<coord, 8>& toSort, int idx = 0) {
@@ -53,7 +54,7 @@ void pressKeys() {
         if (!windowStuff.keyPressedPrev[i + VK_LEFT]) moveDistances[i] = 1.0;
         if (windowStuff.keyPressed[i + VK_LEFT]) {
             windowStuff.keyPressedPrev[i + VK_LEFT] = true;
-            moveDistances[i] = std::min(8.0, moveDistances[i] * moveAccel);
+            moveDistances[i] = std::min(1 + maxSpeed, moveDistances[i] * moveAccel);
         }
     }
     windowStuff.wireFrames[0].updateLocation({moveDistances[2] - moveDistances[0], moveDistances[3] - moveDistances[1], 0});
