@@ -29,6 +29,7 @@ int windowWidth, windowHeight;
 constexpr double moveAccel = 1.2f;
 constexpr double maxSpeed = 10.0f;
 double moveDistances[4];
+WireFrame initWireFrame = {coord{580, 280, 500}, 100, 100, 100};
 
 void bubbleSort(std::array<coord, 8>& toSort, int idx = 0) {
     bool sorted = false;
@@ -48,6 +49,10 @@ void pressKeys() {
         if (MessageBox(windowStuff.hwnd, "Quit the program?", "WARNING!", MB_YESNO) == IDYES) {
             windowStuff.running = false;
         }
+    }
+    if (!windowStuff.keyPressedPrev['R'] && windowStuff.keyPressed['R']) {
+        windowStuff.keyPressedPrev['R'] = true;
+        windowStuff.wireFrames[0] = initWireFrame;
     }
     // Cube movement Left/Up/Right/Down
     for (int i = 0; i < 4; i++) {
@@ -283,7 +288,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     Playback::replay(hwnd, windowStuff.windowBuffer, lpCmdLine);
 
-    windowStuff.wireFrames.emplace_back(coord{580, 280, 500}, 100, 100, 100);
+    windowStuff.wireFrames.emplace_back(initWireFrame);
     // "Game" Loop
     while (windowStuff.running) {
         if (PeekMessage(&Msg, hwnd, 0, 0, PM_REMOVE)) {

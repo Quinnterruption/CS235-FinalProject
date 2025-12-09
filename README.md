@@ -3,11 +3,13 @@
 ## User Input
 Open a `.rndr` file with the program to play back the saved recording
 
-| Input | Descript |
-| --- | --- |
-| `x`/`y`/`z` | Toggles rotation about the `x`/`y`/`z`-axis |
-| `←`/`→`/`↑`/`↓` | Moves object `left`/`right`/`up`/`down` |
-| Scroll `Forward`/`Backward` | Moves object `forwards`/`backwards` |
+| Input                       | Description                                 |
+|-----------------------------|---------------------------------------------|
+| `esc`                       | Closes the program                          |
+| `r`                         | Resets the cube's location and rotation     |
+| `x`/`y`/`z`                 | Toggles rotation about the `x`/`y`/`z`-axis |
+| `←`/`→`/`↑`/`↓`             | Moves object `left`/`right`/`up`/`down`     |
+| Scroll `Forward`/`Backward` | Moves object `forwards`/`backwards`         |
 
 ## Plans for CS235
 - Mouse Movement and Selection of Objects
