@@ -77,24 +77,19 @@ void WindowBuffer::drawSquare(array<int, 2> first, array<int, 2> second, array<i
 }
 
 array<int, 2> WindowBuffer::projectionMap(const coord& toMap) const {
+    if (toMap[2] <= 0) return {-1, -1}; // Culls points if they're behind the camera
+    // Needs to have a check where ever it's called to ensure the points aren't -1, -1
+
     /* 3d Projection to 2d Plane */
     // Find the middle of the current window
-    double midScreenX = (w / 2.0);
-    double midScreenY = (h / 2.0);
+    double midScreenX = w / 2.0;
+    double midScreenY = h / 2.0;
     // Calculate the distance from the focal point to the screen
     double distToScreen = midScreenX / tan(FOV * M_PI / 360.0);
 
-    // Calculate the x and y shift with the offset positions
-    double xShift = abs(toMap[0] - midScreenX) * (toMap[2] - distToScreen);
-    double yShift = abs(toMap[1] - midScreenY) * (toMap[2] - distToScreen);
+    int projectedX = static_cast<int>((toMap[0] / toMap[2]) * distToScreen + midScreenX);
+    int projectedY = static_cast<int>((-toMap[1] / toMap[2]) * distToScreen + midScreenY);
 
-    if (toMap[2] > 0) {    // Prevent division by 0
-        xShift /= toMap[2];
-        yShift /= toMap[2];
-    }
-
-    int projectedX = (toMap[0] < midScreenX) ? toMap[0] + xShift : toMap[0] - xShift;
-    int projectedY = (toMap[1] < midScreenY) ? toMap[1] + yShift : toMap[1] - yShift;
     return {projectedX, projectedY};
 }
 

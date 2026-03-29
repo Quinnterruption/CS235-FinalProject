@@ -21,7 +21,6 @@ struct WindowStuff {
 
 WindowStuff windowStuff;
 RECT rect = {};
-WireFrame prevWireFrame = {};
 
 constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
@@ -29,20 +28,7 @@ int windowWidth, windowHeight;
 constexpr double moveAccel = 1.2f;
 constexpr double maxSpeed = 10.0f;
 double moveDistances[4];
-WireFrame initWireFrame = {coord{580, 280, 500}, 100, 100, 100};
-
-void bubbleSort(std::array<coord, 8>& toSort, int idx = 0) {
-    bool sorted = false;
-    while (!sorted) {
-        sorted = true;
-        for (int i = 0; i < toSort.size() - 1; i++) {
-            if (toSort[i][idx] > toSort[i + 1][idx]) {
-                std::swap(toSort[i], toSort[i + 1]);
-                sorted = false;
-            }
-        }
-    }
-}
+WireFrame initWireFrame = {coord{-50, -50, 200}, 100, 100, 100};
 
 void pressKeys() {
     if (windowStuff.keyPressed[VK_ESCAPE]) {
@@ -66,7 +52,7 @@ void pressKeys() {
         }
     }
     // Update the cube location
-    windowStuff.wireFrames[0].updateLocation({moveDistances[2] - moveDistances[0], moveDistances[3] - moveDistances[1], 0});
+    windowStuff.wireFrames[0].updateLocation({moveDistances[2] - moveDistances[0], moveDistances[1] - moveDistances[3], 0});
     // Cube rotation toggles
     // This conditional ensures that the key isn't triggered more than once
     if (!windowStuff.keyPressedPrev['X'] && windowStuff.keyPressed['X']) {  // x
@@ -102,21 +88,6 @@ void onIdle(int w, int h, WindowBuffer& windowBuffer) {
             windowStuff.playback.update(wireFrame);
         }
     }
-    // Find the topFrontLeft point on the cube and move the cursor to this position
-    // Only active if the wireFrame changes
-    if (prevWireFrame != windowStuff.wireFrames[0] || windowStuff.wireFrames[0].getRotation() > 0) {
-        std::array<coord, 8> toSort = windowStuff.wireFrames[0].coordinates;
-        bubbleSort(toSort, 2);
-        bubbleSort(toSort, 1);
-        bubbleSort(toSort, 0);
-
-        std::array<int, 2> projectedCursor = windowStuff.windowBuffer.projectionMap(toSort[0]);
-        POINT pt = {projectedCursor[0], projectedCursor[1]};
-
-        ClientToScreen(windowStuff.hwnd, &pt);
-        SetCursorPos(pt.x, pt.y);
-    }
-    prevWireFrame = windowStuff.wireFrames[0];
 }
 
 // Win32 function for event handling
