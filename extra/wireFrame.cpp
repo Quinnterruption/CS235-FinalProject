@@ -8,13 +8,13 @@
 constexpr double DEGREES = 2;
 constexpr double THETA = DEGREES * M_PI / 180.0;
 
-const matrix3 xRotate = {{{1.0, 0.0, 0.0},
+const static matrix3 xRotate = {{{1.0, 0.0, 0.0},
                         {0.0, cos(THETA), -sin(THETA)},
                         {0.0, sin(THETA), cos(THETA)}}};
-const matrix3 yRotate = {{{cos(THETA), 0.0, sin(THETA)},
+const static matrix3 yRotate = {{{cos(THETA), 0.0, sin(THETA)},
                         {0.0, 1.0, 0.0},
                         {-sin(THETA), 0.0, cos(THETA)}}};
-const matrix3 zRotate = {{{cos(THETA), -sin(THETA), 0.0},
+const static matrix3 zRotate = {{{cos(THETA), -sin(THETA), 0.0},
                         {sin(THETA), cos(THETA), 0.0},
                         {0.0, 0.0, 1.0}}};
 
