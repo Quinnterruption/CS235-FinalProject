@@ -108,6 +108,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             HDC hdc = GetDC(hwnd);
 
+            // Need to implement CreateDIBSection to allow the use of double buffering
+            // StretchDIBits will happen after CreateDIBSection does its job
             StretchDIBits(hdc,
                           0, 0, windowStuff.windowBuffer.w, windowStuff.windowBuffer.h,
                           0, 0, windowStuff.windowBuffer.w, windowStuff.windowBuffer.h,
