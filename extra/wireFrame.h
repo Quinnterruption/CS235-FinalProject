@@ -56,9 +56,7 @@ struct coord {
      */
     coord operator+(const coord& obj) const {
         coord temp = {};
-        for (int i = 0; i < 3; i++) {
-            temp[i] = coordinates[i] + obj[i];
-        }
+        temp += obj;
         return temp;
     }
 
@@ -69,9 +67,7 @@ struct coord {
      */
     coord operator-(const coord& obj) const {
         coord temp = {};
-        for (int i = 0; i < 3; i++) {
-            temp[i] = coordinates[i] - obj[i];
-        }
+        temp -= obj;
         return temp;
     }
 
@@ -121,7 +117,7 @@ struct coord {
 
     /**
      * Gets the element at a certain position
-     * @param idx the index of the coord
+     * @param idx the index of the coord    0, 1, 2 -> x, y, z
      * @return the element at idx
      */
     double& operator[](const std::size_t idx) {
@@ -130,7 +126,7 @@ struct coord {
 
     /**
      * Gets the constant element at a certain position
-     * @param idx the index of the coord
+     * @param idx the index of the coord    0, 1, 2 -> x, y, z
      * @return the constant element at idx
      */
     const double& operator[](const std::size_t idx) const {
