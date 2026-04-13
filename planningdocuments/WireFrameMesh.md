@@ -20,13 +20,14 @@ triangle2 = {{1,0}, {0,1}, {1,1}}
 ```
 the program would render the two triangles and only draw the line between {1,0} and {0,1} once.
 
-for a cube, it could be
+for a cube, it could be stored in an obj format
 ```
 cube = {tri1, tri2, tri3, tri4, ..., tri11, tri12}
 
-tri1 = {{0,0,0}, {1,0,0}, {0,1,0}}
-tri2 = {{1,0,0}, {0,1,0}, {1,1,0}}
-tri3 = {{1,0,0}, {1,1,0}, {1,1,1}}
-tri4 = {{1,0,0}, {1,1,1}, {1,0,1}}
+vert1 = {0, 0, 0}
+vert2 = {0, 1, 0}
+vert3 = {0, 1, 1}
+etc.
+tri1 = {vert1, vert2, vert3}
 etc.
 ```
