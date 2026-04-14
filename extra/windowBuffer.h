@@ -57,7 +57,7 @@ struct WindowBuffer {
      * @param toMap the 3D coordinate to project
      * @return a 2D point with offset coordinates
      */
-    array<int, 2> projectionMap(const coord& toMap) const;
+    // array<int, 2> projectionMap(const coord& toMap) const;
 
     /**
      * Draws a square between four points

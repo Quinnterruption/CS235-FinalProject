@@ -28,7 +28,7 @@ int windowWidth, windowHeight;
 constexpr double moveAccel = 1.2f;
 constexpr double maxSpeed = 10.0f;
 double moveDistances[4];
-WireFrame initWireFrame = {coord{-50, -50, 200}, 100, 100, 100};
+// WireFrame initWireFrame = {coord{-50, -50, 200}, 100, 100, 100};
 
 void pressKeys() {
     if (windowStuff.keyPressed[VK_ESCAPE]) {
@@ -39,7 +39,7 @@ void pressKeys() {
     // Reset wireFrame
     if (!windowStuff.keyPressedPrev['R'] && windowStuff.keyPressed['R']) {
         windowStuff.keyPressedPrev['R'] = true;
-        windowStuff.wireFrames[0] = initWireFrame;
+        // windowStuff.wireFrames[0] = initWireFrame;
     }
     // Cube movement Left/Up/Right/Down
     // VK_LEFT is the first of the arrow key macros in Win32
@@ -57,22 +57,21 @@ void pressKeys() {
     // This conditional ensures that the key isn't triggered more than once
     if (!windowStuff.keyPressedPrev['X'] && windowStuff.keyPressed['X']) {  // x
         windowStuff.keyPressedPrev['X'] = true;
-        windowStuff.wireFrames[0].toggleRotation(rotateX);
+        // windowStuff.wireFrames[0].toggleRotation(rotateX);
     }
     if (!windowStuff.keyPressedPrev['Y'] && windowStuff.keyPressed['Y']) {  // y
         windowStuff.keyPressedPrev['Y'] = true;
-        windowStuff.wireFrames[0].toggleRotation(rotateY);
+        // windowStuff.wireFrames[0].toggleRotation(rotateY);
     }
     if (!windowStuff.keyPressedPrev['Z'] && windowStuff.keyPressed['Z']) {  // z
         windowStuff.keyPressedPrev['Z'] = true;
-        windowStuff.wireFrames[0].toggleRotation(rotateZ);
+        // windowStuff.wireFrames[0].toggleRotation(rotateZ);
     }
 }
 
 void onIdle(int w, int h, WindowBuffer& windowBuffer) {
     pressKeys();
     windowBuffer.clear();
-
     /*
     for (int i = 0; i < gameWindowBuffer.w; i++) {
         for (int j = 0; j < gameWindowBuffer.h; j++) {
@@ -82,11 +81,11 @@ void onIdle(int w, int h, WindowBuffer& windowBuffer) {
     */
     // Iterate over all WireFrames, draw to screen, rotate, and record updates
     for (WireFrame& wireFrame : windowStuff.wireFrames) {
-        windowBuffer.drawCube(wireFrame);
-        wireFrame.rotate();
-        if (windowStuff.playback.recording()) {
-            windowStuff.playback.update(wireFrame);
-        }
+        // windowBuffer.drawCube(wireFrame);
+        // wireFrame.rotate();
+        // if (windowStuff.playback.recording()) {
+        //     windowStuff.playback.update(wireFrame);
+        // }
     }
 }
 
@@ -158,7 +157,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             switch(LOWORD(wParam)) {
                 case ID_FILE_NEW_CUBE: {
                     // DialogBox(nullptr, MAKEINTRESOURCE(IDD_MYDIALOG), hwnd, (DLGPROC)DeleteItemProc);
-                    windowStuff.wireFrames.emplace_back(coord{400, 300, 1000}, 100, 100, 100);
+                    // windowStuff.wireFrames.emplace_back(coord{400, 300, 1000}, 100, 100, 100);
                     break;
                 }
                 case ID_FILE_RECORD_TEN: {
@@ -222,6 +221,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    WireFrame cube{R"(..\extra\base-objs\cube.obj)"};
     WNDCLASSEX wc;
     HWND hwnd;
     MSG Msg;
@@ -266,9 +266,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
 
-    Playback::replay(hwnd, windowStuff.windowBuffer, lpCmdLine);
+    // Playback::replay(hwnd, windowStuff.windowBuffer, lpCmdLine);
 
-    windowStuff.wireFrames.emplace_back(initWireFrame);
+    // windowStuff.wireFrames.emplace_back(initWireFrame);
     // "Game" Loop
     while (windowStuff.running) {
         if (PeekMessage(&Msg, hwnd, 0, 0, PM_REMOVE)) {

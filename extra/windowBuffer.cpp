@@ -76,50 +76,50 @@ void WindowBuffer::drawSquare(array<int, 2> first, array<int, 2> second, array<i
     drawLine(fourth[0], fourth[1], first[0], first[1]);
 }
 
-array<int, 2> WindowBuffer::projectionMap(const coord& toMap) const {
-    if (toMap[2] <= 0) return {-1, -1}; // Culls points if they're behind the camera
-    // Needs to have a check where ever it's called to ensure the points aren't -1, -1
+// array<int, 2> WindowBuffer::projectionMap(const coord& toMap) const {
+//     if (toMap[2] <= 0) return {-1, -1}; // Culls points if they're behind the camera
+//     // Needs to have a check where ever it's called to ensure the points aren't -1, -1
+//
+//     /* 3d Projection to 2d Plane */
+//     // Find the middle of the current window
+//     double midScreenX = w / 2.0;
+//     double midScreenY = h / 2.0;
+//     // Calculate the distance from the focal point to the screen
+//     double distToScreen = midScreenX / tan(FOV * M_PI / 360.0);
+//
+//     int projectedX = static_cast<int>((toMap[0] / toMap[2]) * distToScreen + midScreenX);
+//     int projectedY = static_cast<int>((-toMap[1] / toMap[2]) * distToScreen + midScreenY);
+//
+//     return {projectedX, projectedY};
+// }
 
-    /* 3d Projection to 2d Plane */
-    // Find the middle of the current window
-    double midScreenX = w / 2.0;
-    double midScreenY = h / 2.0;
-    // Calculate the distance from the focal point to the screen
-    double distToScreen = midScreenX / tan(FOV * M_PI / 360.0);
-
-    int projectedX = static_cast<int>((toMap[0] / toMap[2]) * distToScreen + midScreenX);
-    int projectedY = static_cast<int>((-toMap[1] / toMap[2]) * distToScreen + midScreenY);
-
-    return {projectedX, projectedY};
-}
-
-void WindowBuffer::drawCube(const WireFrame &cube) {
-    // Check for entire object being behind the focal point
-    bool render = false;
-    for (coord point : cube.coordinates) {
-        if (point[2] > 0) {
-            render = true;
-            break;
-        }
-    }
-    // Skips drawing if entire object is behind the focal point
-    if (!render) return;
-
-    array<array<int, 2>, 8> projected = {};
-    for (int i = 0; i < 8; i++) {
-        projected[i] = projectionMap(cube.coordinates[i]);
-    }
-
-    // Draw the top and bottom portions of the cube
-    drawSquare(projected[0], projected[1], projected[2], projected[3]);
-    drawSquare(projected[4], projected[5], projected[6], projected[7]);
-
-    // Draw the lines connecting the top and bottom portions of the cube
-    drawLine(projected[0][0], projected[0][1], projected[7][0], projected[7][1]);
-    drawLine(projected[3][0], projected[3][1], projected[4][0], projected[4][1]);
-    drawLine(projected[2][0], projected[2][1], projected[5][0], projected[5][1]);
-    drawLine(projected[1][0], projected[1][1], projected[6][0], projected[6][1]);
-}
+// void WindowBuffer::drawCube(const WireFrame &cube) {
+//     // Check for entire object being behind the focal point
+//     bool render = false;
+//     for (coord point : cube.coordinates) {
+//         if (point[2] > 0) {
+//             render = true;
+//             break;
+//         }
+//     }
+//     // Skips drawing if entire object is behind the focal point
+//     if (!render) return;
+//
+//     array<array<int, 2>, 8> projected = {};
+//     for (int i = 0; i < 8; i++) {
+//         projected[i] = projectionMap(cube.coordinates[i]);
+//     }
+//
+//     // Draw the top and bottom portions of the cube
+//     drawSquare(projected[0], projected[1], projected[2], projected[3]);
+//     drawSquare(projected[4], projected[5], projected[6], projected[7]);
+//
+//     // Draw the lines connecting the top and bottom portions of the cube
+//     drawLine(projected[0][0], projected[0][1], projected[7][0], projected[7][1]);
+//     drawLine(projected[3][0], projected[3][1], projected[4][0], projected[4][1]);
+//     drawLine(projected[2][0], projected[2][1], projected[5][0], projected[5][1]);
+//     drawLine(projected[1][0], projected[1][1], projected[6][0], projected[6][1]);
+// }
 
 void resetWindowBuffer(WindowBuffer* windowBuffer, BITMAPINFO* bitmapInfo, HWND hwnd) {
     RECT rect = {};
