@@ -33,7 +33,7 @@ std::string cubeFile = R"(..\extra\base-objs\cube.obj)";
 std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
 std::string sphereFile = R"(..\extra\base-objs\sphere.obj)";
 std::string testFile = R"(..\extra\base-objs\test.obj)";
-WireFrame cube{cubeFile};
+WireFrame cube{testFile};
 
 void pressKeys() {
     if (windowStuff.keyPressed[VK_ESCAPE]) {

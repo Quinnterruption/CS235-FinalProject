@@ -67,13 +67,6 @@ WireFrame::WireFrame(const std::string& fileName) {
         }
     }
     setMidpoint();
-    for (auto& vertex : vertices) {
-        std::cout << "x " << vertex.x << " y " << vertex.y << " z " << vertex.z << '\n';
-    }
-    for (auto& face : faces) {
-        std::cout << face[0] << ' ' << face[1] << ' ' << face[2] << '\n';
-    }
-    std::cout << "x " << midpoint.x << " y " << midpoint.y << " z " << midpoint.z << '\n';
 }
 
 
