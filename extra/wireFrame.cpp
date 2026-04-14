@@ -91,7 +91,10 @@ void WireFrame::setMidpoint() const {
 
 
 void WireFrame::updateLocation(const vec3& change) {
-
+    midpoint += change;
+    for (auto& vertex : vertices) {
+        vertex += change;
+    }
 }
 
 

@@ -29,7 +29,11 @@ constexpr double moveAccel = 1.2f;
 constexpr double maxSpeed = 10.0f;
 double moveDistances[4];
 // WireFrame initWireFrame = {coord{-50, -50, 200}, 100, 100, 100};
-WireFrame cube{R"(..\extra\base-objs\test.obj)"};
+std::string cubeFile = R"(..\extra\base-objs\cube.obj)";
+std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
+std::string sphereFile = R"(..\extra\base-objs\sphere.obj)";
+std::string testFile = R"(..\extra\base-objs\test.obj)";
+WireFrame cube{cubeFile};
 
 void pressKeys() {
     if (windowStuff.keyPressed[VK_ESCAPE]) {
@@ -40,7 +44,7 @@ void pressKeys() {
     // Reset wireFrame
     if (!windowStuff.keyPressedPrev['R'] && windowStuff.keyPressed['R']) {
         windowStuff.keyPressedPrev['R'] = true;
-        // windowStuff.wireFrames[0] = initWireFrame;
+        windowStuff.wireFrames[0] = {cubeFile};
     }
     // Cube movement Left/Up/Right/Down
     // VK_LEFT is the first of the arrow key macros in Win32
