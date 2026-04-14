@@ -50,15 +50,17 @@ WireFrame::WireFrame(const std::string& fileName) {
             for (int i = 0; i < 3; i++) {
                 auto space = line.find(' ');
                 vertex[i] = std::stod(line.substr(0, space));
+                if (i == 2) vertex[i] += 100;
                 if (space != std::string::npos) line = line.substr(space + 1);
             }
             vertices.emplace_back(vertex);
         } else if (isFace) {
+            std::cout << line << '\n';
             line = line.substr(2);
             std::array<std::size_t, 3> face;
             for (int i = 0; i < 3; i++) {
                 auto space = line.find(' ');
-                face[i] = std::stod(line.substr(0, space));
+                face[i] = std::stod(line.substr(0, space)) - 1;
                 if (space != std::string::npos) line = line.substr(space + 1);
             }
             faces.emplace_back(face);

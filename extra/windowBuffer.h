@@ -57,16 +57,7 @@ struct WindowBuffer {
      * @param toMap the 3D coordinate to project
      * @return a 2D point with offset coordinates
      */
-    // array<int, 2> projectionMap(const coord& toMap) const;
-
-    /**
-     * Draws a square between four points
-     * @param first point
-     * @param second point
-     * @param third point
-     * @param fourth point
-     */
-    void drawSquare(array<int, 2> first, array<int, 2> second, array<int, 2> third, array<int, 2> fourth);
+    std::pair<int, int> projectionMap(const vec3& toMap) const;
 
     /**
      * Draws a line between two points
@@ -77,14 +68,11 @@ struct WindowBuffer {
      */
     void drawLine(int x1, int y1, int x2, int y2);
 
-    /**
-     * Projection mapping calculation needs to be moved to a different function
-     * Calculates the projection mapping and renders a given WireFrame as a cube
-     * @param cube the WireFrame to render
-     */
-    void drawCube(const WireFrame& cube);
+    void drawTriangle(const vec3& a, const vec3& b, const vec3& c);
 
-//    void drawLine(int x1, int y1, int x2, int y2) {
+    void drawWireframe(const WireFrame& wireframe);
+
+    //    void drawLine(int x1, int y1, int x2, int y2) {
 //        int dx = abs(x2 - x1);
 //        int sx = x1 < x2 ? 1 : -1;
 //        int dy = -abs(y2 - y1);

@@ -29,6 +29,7 @@ constexpr double moveAccel = 1.2f;
 constexpr double maxSpeed = 10.0f;
 double moveDistances[4];
 // WireFrame initWireFrame = {coord{-50, -50, 200}, 100, 100, 100};
+WireFrame cube{R"(..\extra\base-objs\test.obj)"};
 
 void pressKeys() {
     if (windowStuff.keyPressed[VK_ESCAPE]) {
@@ -81,7 +82,7 @@ void onIdle(int w, int h, WindowBuffer& windowBuffer) {
     */
     // Iterate over all WireFrames, draw to screen, rotate, and record updates
     for (WireFrame& wireFrame : windowStuff.wireFrames) {
-        // windowBuffer.drawCube(wireFrame);
+        windowBuffer.drawWireframe(wireFrame);
         // wireFrame.rotate();
         // if (windowStuff.playback.recording()) {
         //     windowStuff.playback.update(wireFrame);
@@ -221,7 +222,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    WireFrame cube{R"(..\extra\base-objs\cube.obj)"};
     WNDCLASSEX wc;
     HWND hwnd;
     MSG Msg;
@@ -268,7 +268,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     // Playback::replay(hwnd, windowStuff.windowBuffer, lpCmdLine);
 
-    // windowStuff.wireFrames.emplace_back(initWireFrame);
+    windowStuff.wireFrames.emplace_back(cube);
     // "Game" Loop
     while (windowStuff.running) {
         if (PeekMessage(&Msg, hwnd, 0, 0, PM_REMOVE)) {

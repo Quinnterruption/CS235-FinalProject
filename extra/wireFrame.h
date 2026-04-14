@@ -197,12 +197,13 @@ enum rotationFlags {
 };
 
 class WireFrame {
+    void setMidpoint() const;
+
+public:
     std::vector<vec3> vertices;
     std::vector<Triangle> faces;
     vec3 midpoint;
 
-    void setMidpoint() const;
-public:
     WireFrame();
 
     WireFrame(const std::string& fileName);
