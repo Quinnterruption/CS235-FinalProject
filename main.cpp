@@ -33,7 +33,7 @@ std::string cubeFile = R"(..\extra\base-objs\cube.obj)";
 std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
 std::string sphereFile = R"(..\extra\base-objs\sphere.obj)";
 std::string testFile = R"(..\extra\base-objs\test.obj)";
-WireFrame cube{cubeFile};
+WireFrame cube{sphereFile};
 
 void pressKeys() {
     if (windowStuff.keyPressed[VK_ESCAPE]) {
@@ -101,15 +101,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             resetWindowBuffer(&windowStuff.windowBuffer, &windowStuff.bitmapInfo, hwnd);
             break;
         }
+        case WM_SIZING: {
+            InvalidateRect(hwnd, NULL, FALSE);
+            return TRUE;
+        }
         // Redraw window handling
         case WM_PAINT: {
+            // Move all this into a RenderFrame function that will calculate the objects
+            // data and also draw to the screen
             PAINTSTRUCT ps;
             HDC DeviceContext = BeginPaint(hwnd, &ps);
 
             HDC hdc = GetDC(hwnd);
 
-            // Need to implement CreateDIBSection to allow the use of double buffering
-            // StretchDIBits will happen after CreateDIBSection does its job
+            SetStretchBltMode(hdc, COLORONCOLOR);
+
             StretchDIBits(hdc,
                           0, 0, windowStuff.windowBuffer.w, windowStuff.windowBuffer.h,
                           0, 0, windowStuff.windowBuffer.w, windowStuff.windowBuffer.h,
@@ -282,10 +288,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     // "Game" Loop
     while (windowStuff.running) {
-        if (PeekMessage(&Msg, hwnd, 0, 0, PM_REMOVE)) {
+        // Process ALL messages at once
+        while (PeekMessage(&Msg, hwnd, 0, 0, PM_REMOVE)) {
             TranslateMessage(&Msg);
             DispatchMessage(&Msg);
-        } else {
+        }
+
+        if (windowStuff.running) {
             // Wait until tick interval is met
             QueryPerformanceCounter(&currentTime);
             std::cout << freq.QuadPart / (currentTime.QuadPart - lastTime.QuadPart) << '\n';  // Output fps
