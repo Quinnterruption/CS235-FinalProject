@@ -5,6 +5,10 @@
 #include <cmath>
 #include "windowBuffer.h"
 
+#include <thread>
+#include <future>
+#include <algorithm>
+
 using std::array;
 
 /**
@@ -147,11 +151,35 @@ void WindowBuffer::drawTriangle(const vec3& a, const vec3& b, const vec3& c) {
     drawLine(cProjX, cProjY, aProjX, aProjY);
 }
 
-void WindowBuffer::drawWireframe(const WireFrame& wireframe) {
-    for (auto& face : wireframe.getFaces()) {
-        auto& vertices = wireframe.getVertices();
+void WindowBuffer::processThreads(std::vector<Triangle>::const_iterator begin, std::vector<Triangle>::const_iterator end, const std::vector<vec3>& vertices) {
+    std::for_each(begin, end, [this, &vertices](const Triangle& face) {
         drawTriangle(vertices[face[0]], vertices[face[1]], vertices[face[2]]);
+    });
+}
+
+void WindowBuffer::drawWireframe(const WireFrame& wireframe) {
+    auto& vertices = wireframe.getVertices();
+    auto& faces = wireframe.getFaces();
+    unsigned int numThreads = std::thread::hardware_concurrency();
+    unsigned int chunkSize = faces.size() / numThreads;
+
+    std::vector<std::future<void>> futures;
+
+    for (unsigned int i = 0; i < numThreads; i++) {
+        auto begin = faces.begin() + i * chunkSize;
+        auto end = (i == numThreads - 1) ? faces.end() : begin + chunkSize;
+
+        // futures.push_back(std::async(std::launch::async, &WindowBuffer::drawTriangle, this, begin, end, vertices));
+        futures.push_back(std::async(std::launch::async, [this, begin, end, &vertices] {
+            this->processThreads(begin, end, vertices);
+        }));
     }
+
+    // Ensure all threads finish
+    for (auto& fut : futures) fut.get();
+    // for (auto& face : wireframe.getFaces()) {
+        // drawTriangle(vertices[face[0]], vertices[face[1]], vertices[face[2]]);
+    // }
 }
 
 void resetWindowBuffer(WindowBuffer* windowBuffer, BITMAPINFO* bitmapInfo, HWND hwnd) {

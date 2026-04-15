@@ -289,9 +289,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             // Wait until tick interval is met
             QueryPerformanceCounter(&currentTime);
             std::cout << freq.QuadPart / (currentTime.QuadPart - lastTime.QuadPart) << '\n';  // Output fps
-            // while ((currentTime.QuadPart - lastTime.QuadPart) < ticksPerAction) {
-            //     QueryPerformanceCounter(&currentTime);
-            // }
 
             if ((currentTime.QuadPart - lastTime.QuadPart) >= ticksPerAction) {
                 onIdle(windowStuff.windowBuffer);
