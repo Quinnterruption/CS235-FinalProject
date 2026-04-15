@@ -75,16 +75,28 @@ enum rotationFlags {
 };
 
 class WireFrame {
-    void setMidpoint();
-
-public:
     std::vector<vec3> vertices;
     std::vector<Triangle> faces;
     vec3 midpoint{};
 
+    void setMidpoint();
+
+public:
+
     WireFrame();
 
     WireFrame(const std::string& fileName);
+
+    /**
+     * Reads an obj file and creates a WireFrame from the data
+     * @param fileName the obj file to read from
+     */
+    void setWireFrame(const std::string& fileName);
+
+    /**
+     * Removes all previously initialized vertices, faces, and midpoint
+     */
+    void clearWireFrame();
 
     // Functions we have to have
     // setMidpoint -> evaluate the midpoint of ALL points and store as a single vec3
@@ -99,7 +111,9 @@ public:
 
     void updateLocation(const vec3& change);
 
-    bool operator==(const WireFrame& obj) const;
+    [[nodiscard]] const std::vector<vec3>& getVertices() const;
+
+    [[nodiscard]] const std::vector<Triangle>& getFaces() const;
 };
 
 // /**

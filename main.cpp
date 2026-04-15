@@ -29,12 +29,11 @@ int windowWidth, windowHeight;
 constexpr double moveAccel = 1.2f;
 constexpr double maxSpeed = 4.0f;
 double moveDistances[4];
-// WireFrame initWireFrame = {coord{-50, -50, 200}, 100, 100, 100};
 std::string cubeFile = R"(..\extra\base-objs\cube.obj)";
 std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
 std::string sphereFile = R"(..\extra\base-objs\sphere.obj)";
 std::string testFile = R"(..\extra\base-objs\test.obj)";
-WireFrame cube{sphereFile};
+WireFrame cube{cubeFile};
 
 void pressKeys() {
     if (windowStuff.keyPressed[VK_ESCAPE]) {
@@ -80,13 +79,7 @@ void pressKeys() {
 void onIdle(WindowBuffer& windowBuffer) {
     pressKeys();
     windowBuffer.clear();
-    /*
-    for (int i = 0; i < gameWindowBuffer.w; i++) {
-        for (int j = 0; j < gameWindowBuffer.h; j++) {
-            gameWindowBuffer.drawAtSafe(i, j, i % 256, j % 256, (i * j) % 256);
-        }
-    }
-    */
+
     // Iterate over all WireFrames, draw to screen, rotate, and record updates
     for (WireFrame& wireFrame : windowStuff.wireFrames) {
         windowBuffer.drawWireframe(wireFrame);

@@ -148,8 +148,9 @@ void WindowBuffer::drawTriangle(const vec3& a, const vec3& b, const vec3& c) {
 }
 
 void WindowBuffer::drawWireframe(const WireFrame& wireframe) {
-    for (auto& face : wireframe.faces) {
-        drawTriangle(wireframe.vertices[face[0]], wireframe.vertices[face[1]], wireframe.vertices[face[2]]);
+    for (auto& face : wireframe.getFaces()) {
+        auto& vertices = wireframe.getVertices();
+        drawTriangle(vertices[face[0]], vertices[face[1]], vertices[face[2]]);
     }
 }
 
