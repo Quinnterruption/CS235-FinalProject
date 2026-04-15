@@ -15,6 +15,7 @@ struct WindowBuffer {
     int FOV = 90;
     int w = 0;
     int h = 0;
+    int screenDiagInPixels = 0;
 
     /**
      * Adds a point and it's color to the memory buffer to be rendered

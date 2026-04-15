@@ -75,12 +75,12 @@ enum rotationFlags {
 };
 
 class WireFrame {
-    void setMidpoint() const;
+    void setMidpoint();
 
 public:
     std::vector<vec3> vertices;
     std::vector<Triangle> faces;
-    vec3 midpoint;
+    vec3 midpoint{};
 
     WireFrame();
 

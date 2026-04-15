@@ -46,21 +46,20 @@ WireFrame::WireFrame(const std::string& fileName) {
 
         if (isVertex) {
             line = line.substr(2);
-            vec3 vertex;
+            vec3 vertex{};
             for (int i = 0; i < 3; i++) {
                 auto space = line.find(' ');
                 vertex[i] = std::stod(line.substr(0, space));
-                if (i == 2) vertex[i] += 100;
+                if (i == 2) vertex[i] += 100;   // Adjust back 100 to avoid spawning in the screen
                 if (space != std::string::npos) line = line.substr(space + 1);
             }
             vertices.emplace_back(vertex);
         } else if (isFace) {
-            std::cout << line << '\n';
             line = line.substr(2);
-            std::array<std::size_t, 3> face;
+            std::array<std::size_t, 3> face{};
             for (int i = 0; i < 3; i++) {
                 auto space = line.find(' ');
-                face[i] = std::stod(line.substr(0, space)) - 1;
+                face[i] = std::stoi(line.substr(0, space)) - 1;
                 if (space != std::string::npos) line = line.substr(space + 1);
             }
             faces.emplace_back(face);
@@ -70,9 +69,8 @@ WireFrame::WireFrame(const std::string& fileName) {
 }
 
 
-void WireFrame::setMidpoint() const {
-    vec3 midpoint{};
-    for (auto& vertex : vertices) {
+void WireFrame::setMidpoint() { // Could probably combine this with the parsing from the file
+    for (const auto& vertex : vertices) {
         midpoint.x += vertex.x;
         midpoint.y += vertex.y;
         midpoint.z += vertex.z;

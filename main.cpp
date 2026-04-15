@@ -22,18 +22,19 @@ struct WindowStuff {
 WindowStuff windowStuff;
 RECT rect = {};
 
+constexpr double TPS = 60;
 constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
 int windowWidth, windowHeight;
 constexpr double moveAccel = 1.2f;
-constexpr double maxSpeed = 10.0f;
+constexpr double maxSpeed = 4.0f;
 double moveDistances[4];
 // WireFrame initWireFrame = {coord{-50, -50, 200}, 100, 100, 100};
 std::string cubeFile = R"(..\extra\base-objs\cube.obj)";
 std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
 std::string sphereFile = R"(..\extra\base-objs\sphere.obj)";
 std::string testFile = R"(..\extra\base-objs\test.obj)";
-WireFrame cube{testFile};
+WireFrame cube{sphereFile};
 
 void pressKeys() {
     if (windowStuff.keyPressed[VK_ESCAPE]) {
@@ -53,7 +54,9 @@ void pressKeys() {
         if (!windowStuff.keyPressedPrev[i + VK_LEFT]) moveDistances[i] = 1.0;
         if (windowStuff.keyPressed[i + VK_LEFT]) {
             windowStuff.keyPressedPrev[i + VK_LEFT] = true;
-            moveDistances[i] = std::min(1 + maxSpeed, moveDistances[i] * moveAccel);
+            if (moveDistances[i] < 1 + maxSpeed) {
+                moveDistances[i] *= moveAccel;
+            }
         }
     }
     // Update the cube location
@@ -74,7 +77,7 @@ void pressKeys() {
     }
 }
 
-void onIdle(int w, int h, WindowBuffer& windowBuffer) {
+void onIdle(WindowBuffer& windowBuffer) {
     pressKeys();
     windowBuffer.clear();
     /*
@@ -272,15 +275,36 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     // Playback::replay(hwnd, windowStuff.windowBuffer, lpCmdLine);
 
-    windowStuff.wireFrames.emplace_back(cube);
+    windowStuff.wireFrames.emplace_back(cube);  // Add wireframe
+
+    // Capture initial frequency
+    LARGE_INTEGER freq;
+    QueryPerformanceFrequency(&freq);
+    double secondsPerCount = 1.0 / static_cast<double>(freq.QuadPart);
+    double ticksPerAction = static_cast<double>(freq.QuadPart) / TPS;
+
+    // Capture initial time
+    LARGE_INTEGER lastTime, currentTime;
+    QueryPerformanceCounter(&lastTime);
+
     // "Game" Loop
     while (windowStuff.running) {
         if (PeekMessage(&Msg, hwnd, 0, 0, PM_REMOVE)) {
             TranslateMessage(&Msg);
             DispatchMessage(&Msg);
         } else {
-            onIdle(windowWidth, windowHeight, windowStuff.windowBuffer);
-            SendMessage(hwnd, WM_PAINT, 0, 0);
+            // Wait until tick interval is met
+            QueryPerformanceCounter(&currentTime);
+            std::cout << freq.QuadPart / (currentTime.QuadPart - lastTime.QuadPart) << '\n';  // Output fps
+            // while ((currentTime.QuadPart - lastTime.QuadPart) < ticksPerAction) {
+            //     QueryPerformanceCounter(&currentTime);
+            // }
+
+            if ((currentTime.QuadPart - lastTime.QuadPart) >= ticksPerAction) {
+                onIdle(windowStuff.windowBuffer);
+                SendMessage(hwnd, WM_PAINT, 0, 0);
+                lastTime = currentTime;
+            }
         }
     }
 
