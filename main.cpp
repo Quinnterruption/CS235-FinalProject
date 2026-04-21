@@ -34,7 +34,8 @@ std::string cubeFile = R"(..\extra\base-objs\cube.obj)";
 std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
 std::string sphereFile = R"(..\extra\base-objs\sphere.obj)";
 std::string testFile = R"(..\extra\base-objs\test.obj)";
-WireFrame cube{sphereFile};
+// WireFrame cube{sphereFile};
+WireFrame* selected = nullptr;
 
 void pressKeys() {
     if (windowStuff.keyPressed[VK_ESCAPE]) {
@@ -42,10 +43,13 @@ void pressKeys() {
             windowStuff.running = false;
         }
     }
+
+    // WireFrame Handling
+    if (selected == nullptr) return;
     // Reset wireFrame
     if (!windowStuff.keyPressedPrev['R'] && windowStuff.keyPressed['R']) {
         windowStuff.keyPressedPrev['R'] = true;
-        windowStuff.wireFrames[0] = {cubeFile};
+        *selected = {cubeFile};
     }
     // Cube movement Left/Up/Right/Down
     // VK_LEFT is the first of the arrow key macros in Win32
@@ -60,20 +64,20 @@ void pressKeys() {
         }
     }
     // Update the cube location
-    windowStuff.wireFrames[0].updateLocation({moveDistances[2] - moveDistances[0], moveDistances[1] - moveDistances[3], 0});
+    selected->updateLocation({moveDistances[2] - moveDistances[0], moveDistances[1] - moveDistances[3], 0});
     // Cube rotation toggles
     // This conditional ensures that the key isn't triggered more than once
     if (!windowStuff.keyPressedPrev['X'] && windowStuff.keyPressed['X']) {  // x
         windowStuff.keyPressedPrev['X'] = true;
-        windowStuff.wireFrames[0].toggleRotation(rotateX);
+        selected->toggleRotation(rotateX);
     }
     if (!windowStuff.keyPressedPrev['Y'] && windowStuff.keyPressed['Y']) {  // y
         windowStuff.keyPressedPrev['Y'] = true;
-        windowStuff.wireFrames[0].toggleRotation(rotateY);
+        selected->toggleRotation(rotateY);
     }
     if (!windowStuff.keyPressedPrev['Z'] && windowStuff.keyPressed['Z']) {  // z
         windowStuff.keyPressedPrev['Z'] = true;
-        windowStuff.wireFrames[0].toggleRotation(rotateZ);
+        selected->toggleRotation(rotateZ);
     }
 }
 
@@ -162,7 +166,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             switch(LOWORD(wParam)) {
                 case ID_FILE_NEW_CUBE: {
                     // DialogBox(nullptr, MAKEINTRESOURCE(IDD_MYDIALOG), hwnd, (DLGPROC)DeleteItemProc);
-                    // windowStuff.wireFrames.emplace_back(coord{400, 300, 1000}, 100, 100, 100);
+                    windowStuff.wireFrames.emplace_back(cubeFile);
+                    selected = &windowStuff.wireFrames.back();
+                    break;
+                }
+                case ID_FILE_NEW_SPHERE: {
+                    windowStuff.wireFrames.emplace_back(sphereFile);
+                    selected = &windowStuff.wireFrames.back();
+                    break;
+                }
+                case ID_FILE_NEW_CYLINDER: {
+                    windowStuff.wireFrames.emplace_back(cylFile);
+                    selected = &windowStuff.wireFrames.back();
                     break;
                 }
                 case ID_FILE_RECORD_TEN: {
@@ -206,10 +221,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_MOUSEWHEEL: {
             short delta = GET_WHEEL_DELTA_WPARAM(wParam);
             if (delta > 0) {
-                windowStuff.wireFrames[0].updateLocation({0, 0, -20});
-            }
-            if (delta < 0) {
-                windowStuff.wireFrames[0].updateLocation({0, 0, 20});
+                if (selected == nullptr) {
+                    for (auto& wireFrame : windowStuff.wireFrames) {
+                        wireFrame.updateLocation({0, 0, -20});
+                    }
+                } else {
+                    selected->updateLocation({0, 0, -20});
+                }
+            } else if (delta < 0) {
+                if (selected == nullptr) {
+                    for (auto& wireFrame : windowStuff.wireFrames) {
+                        wireFrame.updateLocation({0, 0, 20});
+                    }
+                } else {
+                    selected->updateLocation({0, 0, 20});
+                }
             }
             break;
         }
@@ -271,8 +297,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     UpdateWindow(hwnd);
 
     // Playback::replay(hwnd, windowStuff.windowBuffer, lpCmdLine);
-
-    windowStuff.wireFrames.emplace_back(cube);  // Add wireframe
 
     // Capture initial frequency
     LARGE_INTEGER freq;
