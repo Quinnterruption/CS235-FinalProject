@@ -29,6 +29,7 @@ constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
 constexpr float moveAccel = 1.2f;
 constexpr float maxSpeed = 4.0f;
 float moveDistances[4];
+
 std::string cubeFile = R"(..\extra\base-objs\cube.obj)";
 std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
 std::string sphereFile = R"(..\extra\base-objs\sphere.obj)";
