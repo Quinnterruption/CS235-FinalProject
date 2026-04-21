@@ -24,6 +24,7 @@ RECT rect = {};
 
 constexpr double TPS = 60;
 constexpr bool SHOW_FPS = true;
+constexpr bool LIMIT_TPS = true;
 constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
 constexpr float moveAccel = 1.2f;
@@ -77,13 +78,13 @@ void pressKeys() {
     }
 }
 
-void onIdle(WindowBuffer& windowBuffer) {
+void onIdle() {
     pressKeys();
-    windowBuffer.clear();
+    windowStuff.windowBuffer.clearToBlack();
 
     // Iterate over all WireFrames, draw to screen, rotate, and record updates
     for (WireFrame& wireFrame : windowStuff.wireFrames) {
-        windowBuffer.drawWireframe(wireFrame);
+        windowStuff.windowBuffer.drawWireframe(wireFrame);
         wireFrame.rotate();
         // if (windowStuff.playback.recording()) {
         //     windowStuff.playback.update(wireFrame);
@@ -297,11 +298,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             // Wait until tick interval is met
             QueryPerformanceCounter(&currentTime);
 
-            if ((currentTime.QuadPart - lastTime.QuadPart) >= ticksPerAction) {
+            if (LIMIT_TPS && (currentTime.QuadPart - lastTime.QuadPart) >= ticksPerAction) {
                 if (SHOW_FPS) {
                     std::cout << freq.QuadPart / (currentTime.QuadPart - lastTime.QuadPart) << '\n';  // Output fps
                 }
-                onIdle(windowStuff.windowBuffer);
+                onIdle();
                 SendMessage(hwnd, WM_PAINT, 0, 0);
                 lastTime = currentTime;
             }

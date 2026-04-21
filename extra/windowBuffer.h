@@ -43,14 +43,18 @@ struct WindowBuffer {
      * @param b blue value 0-255
      */
     void clear(unsigned char r = 0, unsigned char g = 0, unsigned char b = 0) {
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                memory[4 * (x + y * w) + 0] = b;
-                memory[4 * (x + y * w) + 1] = g;
-                memory[4 * (x + y * w) + 2] = r;
-                memory[4 * (x + y * w) + 3] = 0;
-            }
+        unsigned int color = (r << 16) | (g << 8) | b;
+
+        unsigned int* pixel = reinterpret_cast<unsigned int*>(memory);
+        int totalPixels = w * h;
+
+        for (int i = 0; i < totalPixels; i++) {
+            *pixel++ = color;
         }
+    }
+
+    void clearToBlack() {
+        memset(memory, 0, w * h * 4);
     }
 
     /**
