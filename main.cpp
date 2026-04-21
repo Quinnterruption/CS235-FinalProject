@@ -20,16 +20,15 @@ struct WindowStuff {
 };
 
 WindowStuff windowStuff;
-RECT rect = {};
 
 constexpr double TPS = 60;
 constexpr bool SHOW_FPS = true;
 constexpr bool LIMIT_TPS = true;
 constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
-constexpr float moveAccel = 1.2f;
-constexpr float maxSpeed = 4.0f;
-float moveDistances[4];
+constexpr float moveAccel = 1.2f;   // Should be refactored to WireFrame
+constexpr float maxSpeed = 4.0f;    // Should be refactored to WireFrame
+float moveDistances[4];             // Should be refactored to WireFrame
 
 std::string cubeFile = R"(..\extra\base-objs\cube.obj)";
 std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
@@ -97,7 +96,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         // Resize window handling
         case WM_SIZE: {
-            GetClientRect(hwnd, &rect);
             resetWindowBuffer(&windowStuff.windowBuffer, &windowStuff.bitmapInfo, hwnd);
             break;
         }
