@@ -9,6 +9,7 @@ BEGIN
             MENUITEM "&Cube", ID_FILE_NEW_CUBE
             MENUITEM "&Sphere", ID_FILE_NEW_SPHERE
             MENUITEM "&Cylinder", ID_FILE_NEW_CYLINDER
+            MENUITEM "&Pyramid", ID_FILE_NEW_PYRAMID
         END
         POPUP "&Record"
         BEGIN

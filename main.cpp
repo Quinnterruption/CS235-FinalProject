@@ -34,6 +34,7 @@ std::string cubeFile = R"(..\extra\base-objs\cube.obj)";
 std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
 std::string sphereFile = R"(..\extra\base-objs\sphere.obj)";
 std::string testFile = R"(..\extra\base-objs\test.obj)";
+std::string pyramidFile = R"(..\extra\base-objs\pyramid.obj)";
 // WireFrame cube{sphereFile};
 WireFrame* selected = nullptr;
 
@@ -177,6 +178,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 case ID_FILE_NEW_CYLINDER: {
                     windowStuff.wireFrames.emplace_back(cylFile);
+                    selected = &windowStuff.wireFrames.back();
+                    break;
+                }
+                case ID_FILE_NEW_PYRAMID: {
+                    windowStuff.wireFrames.emplace_back(pyramidFile);
                     selected = &windowStuff.wireFrames.back();
                     break;
                 }
