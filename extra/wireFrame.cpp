@@ -68,7 +68,7 @@ void WireFrame::setWireFrame(const std::string& fileName) {
             vec3 vertex{};
             for (int i = 0; i < 3; i++) {
                 space = line.find(' ');
-                vertex[i] = stod(line.substr(0, space));
+                vertex[i] = stof(line.substr(0, space));
                 line = line.substr(space + 1);
             }
             vertices.emplace_back(vertex);
@@ -94,7 +94,7 @@ void WireFrame::clearWireFrame() {
 
 
 void WireFrame::setMidpoint() {
-    // Could probably combine this with the parsing from the file
+    /* Find midpoint */
     for (const auto& vertex : vertices) {
         midpoint.x += vertex.x;
         midpoint.y += vertex.y;
@@ -104,6 +104,7 @@ void WireFrame::setMidpoint() {
     midpoint.y /= vertices.size();
     midpoint.z /= vertices.size();
 
+    /* Offset all points to have a midpoint of 0, 0, 0 */
     for (auto& vertex : vertices) {
         vertex -= midpoint;
     }
@@ -114,7 +115,6 @@ void WireFrame::setMidpoint() {
 void WireFrame::updateLocation(const vec3& change) {
     midpoint += change;
 }
-
 
 const std::vector<vec3>& WireFrame::getVertices() const { return vertices; }
 

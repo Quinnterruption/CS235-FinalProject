@@ -22,8 +22,8 @@ struct WindowStuff {
 WindowStuff windowStuff;
 
 constexpr double TPS = 60;
-constexpr bool SHOW_FPS = true;
 constexpr bool LIMIT_TPS = true;
+constexpr bool SHOW_FPS = false;
 constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
 constexpr float moveAccel = 1.2f;   // Should be refactored to WireFrame
@@ -34,7 +34,7 @@ std::string cubeFile = R"(..\extra\base-objs\cube.obj)";
 std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
 std::string sphereFile = R"(..\extra\base-objs\sphere.obj)";
 std::string testFile = R"(..\extra\base-objs\test.obj)";
-WireFrame cube{cylFile};
+WireFrame cube{sphereFile};
 
 void pressKeys() {
     if (windowStuff.keyPressed[VK_ESCAPE]) {

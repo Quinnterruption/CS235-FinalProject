@@ -10,6 +10,7 @@ add_executable(FinalProject main.cpp
         resources/resource.h resources/resource.rc
         extra/windowBuffer.h extra/windowBuffer.cpp
         extra/playback.h extra/playback.cpp
-        extra/triangle.h
-        extra/quaternion.h
+        extra/includes/triangle.h
+        extra/includes/quaternion.h
+        extra/includes/vec3.h
 )

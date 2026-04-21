@@ -42,7 +42,7 @@ struct WindowBuffer {
      * @param g green value 0-255
      * @param b blue value 0-255
      */
-    void clear(unsigned char r = 0, unsigned char g = 0, unsigned char b = 0) {
+    void clear(unsigned char r = 0, unsigned char g = 0, unsigned char b = 0) const {
         unsigned int color = (r << 16) | (g << 8) | b;
 
         unsigned int* pixel = reinterpret_cast<unsigned int*>(memory);
@@ -53,7 +53,7 @@ struct WindowBuffer {
         }
     }
 
-    void clearToBlack() {
+    void clearToBlack() const {
         memset(memory, 0, w * h * 4);
     }
 
@@ -62,7 +62,7 @@ struct WindowBuffer {
      * @param toMap the 3D coordinate to project
      * @return a 2D point with offset coordinates
      */
-    std::pair<int, int> projectionMap(const vec3& toMap) const;
+    [[nodiscard]] std::pair<int, int> projectionMap(const vec3& toMap) const;
 
     /**
      * Draws a line between two points

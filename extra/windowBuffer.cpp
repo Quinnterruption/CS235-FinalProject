@@ -50,45 +50,45 @@ void WindowBuffer::drawLine(int x1, int y1, int x2, int y2) {
             double deltaX = -x1;
             double deltaY = m * deltaX;
             x1 = 0;
-            y1 += std::round(deltaY);
+            y1 += round(deltaY);
         } else if (x1 > w) {
             double deltaX = x1 - w;
             double deltaY = -m * deltaX;
             x1 = w;
-            y1 += std::round(deltaY);
+            y1 += round(deltaY);
         }
         if (y1 < 0) {
             double deltaY = -y1;
             double deltaX = deltaY / m;
             y1 = 0;
-            x1 += std::round(deltaX);
+            x1 += round(deltaX);
         } else if (y1 > h) {
             double deltaY = y1 - h;
             double deltaX = deltaY / -m;
             y1 = h;
-            x1 += std::round(deltaX);
+            x1 += round(deltaX);
         }
         if (x2 < 0) {
             double deltaX = -x2;
             double deltaY = m * deltaX;
             x2 = 0;
-            y2 += std::round(deltaY);
+            y2 += round(deltaY);
         } else if (x2 > w) {
             double deltaX = x2 - w;
             double deltaY = -m * deltaX;
             x2 = w;
-            y2 += std::round(deltaY);
+            y2 += round(deltaY);
         }
         if (y2 < 0) {
             double deltaY = -y2;
             double deltaX = deltaY / m;
             y2 = 0;
-            x2 += std::round(deltaX);
+            x2 += round(deltaX);
         } else if (y2 > h) {
             double deltaY = y2 - h;
             double deltaX = deltaY / -m;
             y2 = h;
-            x2 += std::round(deltaX);
+            x2 += round(deltaX);
         }
     }
 
@@ -129,7 +129,7 @@ std::pair<int, int> WindowBuffer::projectionMap(const vec3& toMap) const {
 
     /* 3d Projection to 2d Plane */
     // Find the middle of the current window
-    double midScreenX = w / 2.0;
+    double midScreenX = w / 2.0;    // TODO move to windowBuffer.h as a global var
     double midScreenY = h / 2.0;
     // Calculate the distance from the focal point to the screen
     double distToScreen = midScreenX / tan(FOV * M_PI / 360.0);
