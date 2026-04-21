@@ -151,15 +151,20 @@ void WindowBuffer::drawTriangle(const vec3& a, const vec3& b, const vec3& c) {
     drawLine(cProjX, cProjY, aProjX, aProjY);
 }
 
-void WindowBuffer::processThreads(std::vector<Triangle>::const_iterator begin, std::vector<Triangle>::const_iterator end, const std::vector<vec3>& vertices) {
-    std::for_each(begin, end, [this, &vertices](const Triangle& face) {
-        drawTriangle(vertices[face[0]], vertices[face[1]], vertices[face[2]]);
+void WindowBuffer::processThreads(
+    std::vector<Triangle>::const_iterator begin,
+    std::vector<Triangle>::const_iterator end,
+    const std::vector<vec3>& vertices,
+    const vec3& location) {
+    std::for_each(begin, end, [this, &vertices, location](const Triangle& face) {
+        drawTriangle(vertices[face[0]] + location, vertices[face[1]] + location, vertices[face[2]] + location);
     });
 }
 
 void WindowBuffer::drawWireframe(const WireFrame& wireframe) {
     auto& vertices = wireframe.getVertices();
     auto& faces = wireframe.getFaces();
+    const auto& location = wireframe.getLocation();
     unsigned int numThreads = std::thread::hardware_concurrency();
     unsigned int chunkSize = faces.size() / numThreads;
 
@@ -170,8 +175,8 @@ void WindowBuffer::drawWireframe(const WireFrame& wireframe) {
         auto end = (i == numThreads - 1) ? faces.end() : begin + chunkSize;
 
         // futures.push_back(std::async(std::launch::async, &WindowBuffer::drawTriangle, this, begin, end, vertices));
-        futures.push_back(std::async(std::launch::async, [this, begin, end, &vertices] {
-            this->processThreads(begin, end, vertices);
+        futures.push_back(std::async(std::launch::async, [this, begin, end, &vertices, location] {
+            this->processThreads(begin, end, vertices, location);
         }));
     }
 

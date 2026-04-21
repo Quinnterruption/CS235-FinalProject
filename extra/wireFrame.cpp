@@ -73,7 +73,7 @@ void WireFrame::setWireFrame(const std::string& fileName) {
         }
     }
 
-    setMidpoint();
+    // setMidpoint();
 }
 
 void WireFrame::clearWireFrame() {
@@ -98,9 +98,9 @@ void WireFrame::setMidpoint() {
 
 void WireFrame::updateLocation(const vec3& change) {
     midpoint += change;
-    for (auto& vertex : vertices) {
-        vertex += change;
-    }
+    // for (auto& vertex : vertices) {
+    //     vertex += change;
+    // }
 }
 
 

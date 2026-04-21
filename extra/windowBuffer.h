@@ -71,7 +71,11 @@ struct WindowBuffer {
 
     void drawTriangle(const vec3& a, const vec3& b, const vec3& c);
 
-    void processThreads(std::vector<Triangle>::const_iterator begin, std::vector<Triangle>::const_iterator end, const std::vector<vec3>& vertices);
+    void processThreads(
+        std::vector<Triangle>::const_iterator begin,
+        std::vector<Triangle>::const_iterator end,
+        const std::vector<vec3>& vertices,
+        const vec3& location);
 
     void drawWireframe(const WireFrame& wireframe);
 };
