@@ -8,9 +8,11 @@
 #include <cmath>
 #include <filesystem>
 
-constexpr float DEGREES = 1.0f;
-const float SIN_DEGREES = sinf(DEGREES * M_PI / 180.0);
-const float COS_DEGREES = cosf(DEGREES * M_PI / 180.0);
+constexpr float DEGREES = 2.0f;
+constexpr float RADIANS = DEGREES * M_PI / 180.0f;
+const Quaternion quatX = rndr::fromAxisAngle(1.0f, 0.0f, 0.0f, RADIANS);
+const Quaternion quatY = rndr::fromAxisAngle(0.0f, 1.0f, 0.0f, RADIANS);
+const Quaternion quatZ = rndr::fromAxisAngle(0.0f, 0.0f, 1.0f, RADIANS);
 
 
 WireFrame::WireFrame() = default;
@@ -28,13 +30,13 @@ void WireFrame::rotate() {
     if (rotateFlags == 0) return;
 
     if ((rotateFlags & rotateX) == rotateX) {   // Rotate around X
-        rotation *= Quaternion{SIN_DEGREES, 0.0f, 0.0f, COS_DEGREES};
+        rotation *= quatX;
     }
     if ((rotateFlags & rotateY) == rotateY) {   // Rotate around Y
-        rotation *= Quaternion{0.0f, SIN_DEGREES, 0.0f, COS_DEGREES};
+        rotation *= quatY;
     }
     if ((rotateFlags & rotateZ) == rotateZ) {   // Rotate around Z
-        rotation *= Quaternion{0.0f, 0.0f, SIN_DEGREES, COS_DEGREES};
+        rotation *= quatZ;
     }
     rotation.normalize();
 }
