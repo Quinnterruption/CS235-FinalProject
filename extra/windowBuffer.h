@@ -18,7 +18,7 @@ struct WindowBuffer {
     int screenDiagInPixels = 0;
 
     /**
-     * Adds a point and it's color to the memory buffer to be rendered
+     * Adds a point and its color to the memory buffer to be rendered
      * @param x coordinate
      * @param y coordinate
      * @param r red value 0-255
