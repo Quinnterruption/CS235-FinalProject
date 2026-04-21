@@ -143,6 +143,7 @@ std::pair<int, int> WindowBuffer::projectionMap(const vec3& toMap) const {
 
 void WindowBuffer::drawTriangle(const vec3& a, const vec3& b, const vec3& c) {
     if (a.z <= 0 && b.z <= 0 && c.z <= 0) return;   // Cull points that are all behind the focal point
+
     auto [aProjX, aProjY] = projectionMap(a);
     auto [bProjX, bProjY] = projectionMap(b);
     auto [cProjX, cProjY] = projectionMap(c);
@@ -157,6 +158,7 @@ void WindowBuffer::processThreads(
     const std::vector<vec3>& vertices,
     const vec3& location,
     const Quaternion& rotation) {
+
     std::for_each(begin, end, [this, &vertices, location, rotation](const Triangle& face) {
         drawTriangle(
             vec3::rotate(vertices[face[0]], rotation) + location,
