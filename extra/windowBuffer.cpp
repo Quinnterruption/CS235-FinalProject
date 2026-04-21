@@ -182,9 +182,6 @@ void WindowBuffer::drawWireframe(const WireFrame& wireframe) {
 
     // Ensure all threads finish
     for (auto& fut : futures) fut.get();
-    // for (auto& face : wireframe.getFaces()) {
-        // drawTriangle(vertices[face[0]], vertices[face[1]], vertices[face[2]]);
-    // }
 }
 
 void resetWindowBuffer(WindowBuffer* windowBuffer, BITMAPINFO* bitmapInfo, HWND hwnd) {

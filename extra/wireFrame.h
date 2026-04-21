@@ -15,11 +15,11 @@
 using std::array;
 
 struct vec3 {
-    double x, y, z;
+    float x, y, z;
 
     vec3() = default;
 
-    vec3(const std::initializer_list<double> list) {
+    vec3(const std::initializer_list<float > list) {
         if (list.size() != 3) throw std::invalid_argument("Vec3 must have exactly 3 elements");
         x = *list.begin();
         y = *(list.begin() + 1);
@@ -51,7 +51,7 @@ struct vec3 {
     bool operator==(const vec3& obj) const {
         return x == obj.x && y == obj.y && z == obj.z;
     }
-    double& operator[](const std::size_t idx) {
+    float& operator[](const std::size_t idx) {
         switch (idx) {
             case 0:
                 return x;
