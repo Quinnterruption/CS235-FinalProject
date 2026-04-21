@@ -28,13 +28,13 @@ void WireFrame::rotate() {
     if (rotateFlags == 0) return;
 
     if ((rotateFlags & rotateX) == rotateX) {   // Rotate around X
-        rotation = rotation * Quaternion{SIN_DEGREES, 0.0f, 0.0f, COS_DEGREES};
+        rotation *= Quaternion{SIN_DEGREES, 0.0f, 0.0f, COS_DEGREES};
     }
     if ((rotateFlags & rotateY) == rotateY) {   // Rotate around Y
-        rotation = rotation * Quaternion{0.0f, SIN_DEGREES, 0.0f, COS_DEGREES};
+        rotation *= Quaternion{0.0f, SIN_DEGREES, 0.0f, COS_DEGREES};
     }
     if ((rotateFlags & rotateZ) == rotateZ) {   // Rotate around Z
-        rotation = rotation * Quaternion{0.0f, 0.0f, SIN_DEGREES, COS_DEGREES};
+        rotation *= Quaternion{0.0f, 0.0f, SIN_DEGREES, COS_DEGREES};
     }
     rotation.normalize();
 }

@@ -16,6 +16,9 @@ struct WindowBuffer {
     int w = 0;
     int h = 0;
     int screenDiagInPixels = 0;
+    int midScreenX = 0;
+    int midScreenY = 0;
+    int distToScreen = 0;
 
     /**
      * Adds a point and its color to the memory buffer to be rendered

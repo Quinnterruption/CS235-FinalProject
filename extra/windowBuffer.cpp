@@ -128,12 +128,6 @@ std::pair<int, int> WindowBuffer::projectionMap(const vec3& toMap) const {
     // if (toMap.z <= 0) return {-1, -1}; // Culls points if they're behind the camera
 
     /* 3d Projection to 2d Plane */
-    // Find the middle of the current window
-    double midScreenX = w / 2.0;    // TODO move to windowBuffer.h as a global var
-    double midScreenY = h / 2.0;
-    // Calculate the distance from the focal point to the screen
-    double distToScreen = midScreenX / tan(FOV * M_PI / 360.0);
-
     double distToObj = toMap.z <= 0 ? 0.01 : toMap.z;
     int projectedX = static_cast<int>((toMap.x / distToObj) * distToScreen + midScreenX);
     int projectedY = static_cast<int>((-toMap.y / distToObj) * distToScreen + midScreenY);
@@ -181,7 +175,6 @@ void WindowBuffer::drawWireframe(const WireFrame& wireframe) {
         auto begin = faces.begin() + i * chunkSize;
         auto end = (i == numThreads - 1) ? faces.end() : begin + chunkSize;
 
-        // futures.push_back(std::async(std::launch::async, &WindowBuffer::drawTriangle, this, begin, end, vertices));
         futures.push_back(std::async(std::launch::async, [this, begin, end, &vertices, location, rotation] {
             this->processThreads(begin, end, vertices, location, rotation);
         }));
@@ -198,6 +191,9 @@ void resetWindowBuffer(WindowBuffer* windowBuffer, BITMAPINFO* bitmapInfo, HWND 
     windowBuffer->w = rect.right;
     windowBuffer->screenDiagInPixels = ceil(sqrt(
         windowBuffer->w * windowBuffer->w + windowBuffer->h * windowBuffer->h));
+    windowBuffer->midScreenX = windowBuffer->w / 2.0;
+    windowBuffer->midScreenY = windowBuffer->h / 2.0;
+    windowBuffer->distToScreen = windowBuffer->midScreenX / tan(windowBuffer->FOV * M_PI / 360.0);
 
     if (windowBuffer->memory) {
         VirtualFree(windowBuffer->memory, 0, MEM_RELEASE);

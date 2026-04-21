@@ -22,6 +22,10 @@ namespace rndr {
             };
         }
 
+        Quaternion& operator*=(const Quaternion& q) {
+            return *this = *this * q;
+        }
+
         [[nodiscard]] Quaternion conjugate() const { return {-x, -y, -z, w}; }
 
         void normalize() {
