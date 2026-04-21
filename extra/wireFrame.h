@@ -9,10 +9,11 @@
 #include <fstream>
 #include <vector>
 #include "triangle.h"
+#include "quaternion.h"
 
 #define matrix3 std::array<std::array<double, 3>, 3>
 
-using std::array;
+// using std::array;
 
 struct vec3 {
     float x, y, z;
@@ -63,6 +64,14 @@ struct vec3 {
                 throw std::out_of_range("Invalid index");
         }
     }
+
+    static vec3 rotate(const vec3& v, Quaternion q) {
+        Quaternion vecAsQuat(v.x, v.y, v.z, 0.0f);
+        q.normalize();
+        Quaternion qConj = q.conjugate();
+        Quaternion rotated = q * vecAsQuat * qConj;
+        return {rotated.x, rotated.y, rotated.z};
+    }
 };
 
 /**
@@ -78,6 +87,9 @@ class WireFrame {
     std::vector<vec3> vertices;
     std::vector<Triangle> faces;
     vec3 midpoint{};
+    // Quaternion rotation{0.0f, 0.3827f, 0.0f, 0.9239f};
+    Quaternion rotation{};
+    int rotateFlags = 0;
 
     void setMidpoint();
 
@@ -112,6 +124,12 @@ public:
     void updateLocation(const vec3& change);
 
     const vec3& getLocation() const { return midpoint; }
+
+    const Quaternion& getRotation() const { return rotation; }
+
+    void toggleRotation(const int axis);
+
+    void rotate();
 
     [[nodiscard]] const std::vector<vec3>& getVertices() const;
 

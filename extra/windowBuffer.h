@@ -75,7 +75,8 @@ struct WindowBuffer {
         std::vector<Triangle>::const_iterator begin,
         std::vector<Triangle>::const_iterator end,
         const std::vector<vec3>& vertices,
-        const vec3& location);
+        const vec3& location,
+        const Quaternion& rotation);
 
     void drawWireframe(const WireFrame& wireframe);
 };

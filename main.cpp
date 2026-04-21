@@ -23,9 +23,9 @@ WindowStuff windowStuff;
 RECT rect = {};
 
 constexpr double TPS = 60;
+constexpr bool SHOW_FPS = true;
 constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
-int windowWidth, windowHeight;
 constexpr float moveAccel = 1.2f;
 constexpr float maxSpeed = 4.0f;
 float moveDistances[4];
@@ -33,7 +33,7 @@ std::string cubeFile = R"(..\extra\base-objs\cube.obj)";
 std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
 std::string sphereFile = R"(..\extra\base-objs\sphere.obj)";
 std::string testFile = R"(..\extra\base-objs\test.obj)";
-WireFrame cube{sphereFile};
+WireFrame cube{cylFile};
 
 void pressKeys() {
     if (windowStuff.keyPressed[VK_ESCAPE]) {
@@ -64,15 +64,15 @@ void pressKeys() {
     // This conditional ensures that the key isn't triggered more than once
     if (!windowStuff.keyPressedPrev['X'] && windowStuff.keyPressed['X']) {  // x
         windowStuff.keyPressedPrev['X'] = true;
-        // windowStuff.wireFrames[0].toggleRotation(rotateX);
+        windowStuff.wireFrames[0].toggleRotation(rotateX);
     }
     if (!windowStuff.keyPressedPrev['Y'] && windowStuff.keyPressed['Y']) {  // y
         windowStuff.keyPressedPrev['Y'] = true;
-        // windowStuff.wireFrames[0].toggleRotation(rotateY);
+        windowStuff.wireFrames[0].toggleRotation(rotateY);
     }
     if (!windowStuff.keyPressedPrev['Z'] && windowStuff.keyPressed['Z']) {  // z
         windowStuff.keyPressedPrev['Z'] = true;
-        // windowStuff.wireFrames[0].toggleRotation(rotateZ);
+        windowStuff.wireFrames[0].toggleRotation(rotateZ);
     }
 }
 
@@ -83,7 +83,7 @@ void onIdle(WindowBuffer& windowBuffer) {
     // Iterate over all WireFrames, draw to screen, rotate, and record updates
     for (WireFrame& wireFrame : windowStuff.wireFrames) {
         windowBuffer.drawWireframe(wireFrame);
-        // wireFrame.rotate();
+        wireFrame.rotate();
         // if (windowStuff.playback.recording()) {
         //     windowStuff.playback.update(wireFrame);
         // }
@@ -96,8 +96,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         // Resize window handling
         case WM_SIZE: {
             GetClientRect(hwnd, &rect);
-            windowHeight = rect.bottom;
-            windowWidth = rect.right;
             resetWindowBuffer(&windowStuff.windowBuffer, &windowStuff.bitmapInfo, hwnd);
             break;
         }
@@ -297,9 +295,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         if (windowStuff.running) {
             // Wait until tick interval is met
             QueryPerformanceCounter(&currentTime);
-            std::cout << freq.QuadPart / (currentTime.QuadPart - lastTime.QuadPart) << '\n';  // Output fps
 
             if ((currentTime.QuadPart - lastTime.QuadPart) >= ticksPerAction) {
+                if (SHOW_FPS) {
+                    std::cout << freq.QuadPart / (currentTime.QuadPart - lastTime.QuadPart) << '\n';  // Output fps
+                }
                 onIdle(windowStuff.windowBuffer);
                 SendMessage(hwnd, WM_PAINT, 0, 0);
                 lastTime = currentTime;

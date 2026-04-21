@@ -8,18 +8,9 @@
 #include <cmath>
 #include <filesystem>
 
-constexpr double DEGREES = 2;
-constexpr double THETA = DEGREES * M_PI / 180.0;
-
-const static matrix3 xRotate = {{{1.0, 0.0, 0.0},
-                        {0.0, cos(THETA), -sin(THETA)},
-                        {0.0, sin(THETA), cos(THETA)}}};
-const static matrix3 yRotate = {{{cos(THETA), 0.0, sin(THETA)},
-                        {0.0, 1.0, 0.0},
-                        {-sin(THETA), 0.0, cos(THETA)}}};
-const static matrix3 zRotate = {{{cos(THETA), -sin(THETA), 0.0},
-                        {sin(THETA), cos(THETA), 0.0},
-                        {0.0, 0.0, 1.0}}};
+constexpr float DEGREES = 1.0f;
+const float SIN_DEGREES = sinf(DEGREES * M_PI / 180.0);
+const float COS_DEGREES = cosf(DEGREES * M_PI / 180.0);
 
 
 WireFrame::WireFrame() = default;
@@ -27,6 +18,25 @@ WireFrame::WireFrame() = default;
 
 WireFrame::WireFrame(const std::string& fileName) {
     setWireFrame(fileName);
+}
+
+void WireFrame::toggleRotation(const int axis) {
+    rotateFlags ^= axis;
+}
+
+void WireFrame::rotate() {
+    if (rotateFlags == 0) return;
+
+    if ((rotateFlags & rotateX) == rotateX) {   // Rotate around X
+        rotation = rotation * Quaternion{SIN_DEGREES, 0.0f, 0.0f, COS_DEGREES};
+    }
+    if ((rotateFlags & rotateY) == rotateY) {   // Rotate around Y
+        rotation = rotation * Quaternion{0.0f, SIN_DEGREES, 0.0f, COS_DEGREES};
+    }
+    if ((rotateFlags & rotateZ) == rotateZ) {   // Rotate around Z
+        rotation = rotation * Quaternion{0.0f, 0.0f, SIN_DEGREES, COS_DEGREES};
+    }
+    rotation.normalize();
 }
 
 void WireFrame::setWireFrame(const std::string& fileName) {
@@ -73,7 +83,7 @@ void WireFrame::setWireFrame(const std::string& fileName) {
         }
     }
 
-    // setMidpoint();
+    setMidpoint();
 }
 
 void WireFrame::clearWireFrame() {
@@ -93,14 +103,16 @@ void WireFrame::setMidpoint() {
     midpoint.x /= vertices.size();
     midpoint.y /= vertices.size();
     midpoint.z /= vertices.size();
+
+    for (auto& vertex : vertices) {
+        vertex -= midpoint;
+    }
+    midpoint = {0, 0, 0};
 }
 
 
 void WireFrame::updateLocation(const vec3& change) {
     midpoint += change;
-    // for (auto& vertex : vertices) {
-    //     vertex += change;
-    // }
 }
 
 

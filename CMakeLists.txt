@@ -11,4 +11,5 @@ add_executable(FinalProject main.cpp
         extra/windowBuffer.h extra/windowBuffer.cpp
         extra/playback.h extra/playback.cpp
         extra/triangle.h
+        extra/quaternion.h
 )
