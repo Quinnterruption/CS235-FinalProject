@@ -39,12 +39,12 @@ struct vec3 {
         return *this;
     }
     vec3 operator+(const vec3& obj) const {
-        vec3 temp = {};
+        vec3 temp = *this;
         temp += obj;
         return temp;
     }
     vec3 operator-(const vec3& obj) const {
-        vec3 temp = {};
+        vec3 temp = *this;
         temp -= obj;
         return temp;
     }
@@ -110,6 +110,8 @@ public:
     //      all these functions rely on matrixMult as well
 
     void updateLocation(const vec3& change);
+
+    const vec3& getLocation() const { return midpoint; }
 
     [[nodiscard]] const std::vector<vec3>& getVertices() const;
 
