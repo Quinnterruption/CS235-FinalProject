@@ -10,9 +10,9 @@
 
 constexpr float DEGREES = 2.0f;
 constexpr float RADIANS = DEGREES * M_PI / 180.0f;
-const Quaternion quatX = rndr::fromAxisAngle(1.0f, 0.0f, 0.0f, RADIANS);
-const Quaternion quatY = rndr::fromAxisAngle(0.0f, 1.0f, 0.0f, RADIANS);
-const Quaternion quatZ = rndr::fromAxisAngle(0.0f, 0.0f, 1.0f, RADIANS);
+const Quaternion quatX = Quaternion::fromAxisAngle(1.0f, 0.0f, 0.0f, RADIANS);
+const Quaternion quatY = Quaternion::fromAxisAngle(0.0f, 1.0f, 0.0f, RADIANS);
+const Quaternion quatZ = Quaternion::fromAxisAngle(0.0f, 0.0f, 1.0f, RADIANS);
 
 
 WireFrame::WireFrame() = default;

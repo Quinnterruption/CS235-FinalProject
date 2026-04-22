@@ -35,13 +35,13 @@ namespace rndr {
             z /= len;
             w /= len;
         }
-    };
 
-    inline Quaternion fromAxisAngle(float x, float y, float z, float radians) {
-        float halfAngle = radians / 2.0f;
-        float s = std::sin(halfAngle);
-        return {x * s, y * s, z * s, std::cos(halfAngle)};
-    }
+        static Quaternion fromAxisAngle(float x, float y, float z, float radians) {
+            float halfAngle = radians / 2.0f;
+            float s = std::sin(halfAngle);
+            return {x * s, y * s, z * s, std::cos(halfAngle)};
+        }
+    };
 }
 
 #endif //FINALPROJECT_QUATERNION_H
