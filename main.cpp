@@ -35,7 +35,6 @@ std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
 std::string sphereFile = R"(..\extra\base-objs\sphere.obj)";
 std::string testFile = R"(..\extra\base-objs\test.obj)";
 std::string pyramidFile = R"(..\extra\base-objs\pyramid.obj)";
-// WireFrame cube{sphereFile};
 WireFrame* selected = nullptr;
 
 void pressKeys() {
