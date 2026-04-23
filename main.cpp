@@ -23,7 +23,7 @@ WindowStuff windowStuff;
 
 constexpr double TPS = 60;
 constexpr bool LIMIT_TPS = true;
-constexpr bool SHOW_FPS = true;
+constexpr bool SHOW_FPS = false;
 bool ANTI_ALIAS = false;
 constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;

@@ -257,6 +257,8 @@ void WindowBuffer::FXAA() {
                 output[4 * (x + y * w) + 1] = (1.0f - blend) * ((middle >> 8) & 0xFF) + blend * (((north >> 8) & 0xFF) + ((east >> 8) & 0xFF) + ((south >> 8) & 0xFF) + ((west >> 8) & 0xFF)) * 0.25f;
                 output[4 * (x + y * w) + 2] = (1.0f - blend) * ((middle >> 0) & 0xFF) + blend * (((north >> 0) & 0xFF) + ((east >> 0) & 0xFF) + ((south >> 0) & 0xFF) + ((west >> 0) & 0xFF)) * 0.25f;
                 output[4 * (x + y * w) + 3] = 0;
+                // unsigned int newColor = (1.0f - blend) * middle + blend * (north + east + south + west) * 0.25f;
+                // output[4 * (x + y * w)] = newColor;
             }
         }
     }
