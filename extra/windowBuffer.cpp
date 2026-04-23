@@ -150,12 +150,14 @@ void WindowBuffer::processThreads(
     const std::vector<vec3>& vertices,
     const vec3& location,
     const Quaternion& rotation) {
+    // Can be used to rotate around a specific point relative to the object
+    vec3 rotationPoint{0, 0, 0};    // 0, 0, 0 spins around the objects centerpoint
 
-    std::for_each(begin, end, [this, &vertices, location, rotation](const Triangle& face) {
+    std::for_each(begin, end, [this, &vertices, location, rotation, rotationPoint](const Triangle& face) {
         drawTriangle(
-            vec3::rotate(vertices[face[0]], rotation) + location,
-            vec3::rotate(vertices[face[1]], rotation) + location,
-            vec3::rotate(vertices[face[2]], rotation) + location);
+            vec3::rotate(vertices[face[0]] + rotationPoint, rotation) + location,
+            vec3::rotate(vertices[face[1]] + rotationPoint, rotation) + location,
+            vec3::rotate(vertices[face[2]] + rotationPoint, rotation) + location);
     });
 }
 

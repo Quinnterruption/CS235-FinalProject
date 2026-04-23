@@ -8,7 +8,7 @@
 #include <cmath>
 #include <filesystem>
 
-constexpr float DEGREES = 2.0f;
+constexpr float DEGREES = 1.0f;
 constexpr float RADIANS = DEGREES * M_PI / 180.0f;
 const Quaternion quatX = Quaternion::fromAxisAngle(1.0f, 0.0f, 0.0f, RADIANS);
 const Quaternion quatY = Quaternion::fromAxisAngle(0.0f, 1.0f, 0.0f, RADIANS);
