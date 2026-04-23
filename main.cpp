@@ -23,7 +23,8 @@ WindowStuff windowStuff;
 
 constexpr double TPS = 60;
 constexpr bool LIMIT_TPS = true;
-constexpr bool SHOW_FPS = false;
+constexpr bool SHOW_FPS = true;
+bool ANTI_ALIAS = false;
 constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
 constexpr float moveAccel = 1.2f;   // Should be refactored to WireFrame
@@ -42,6 +43,12 @@ void pressKeys() {
         if (MessageBox(windowStuff.hwnd, "Quit the program?", "WARNING!", MB_YESNO) == IDYES) {
             windowStuff.running = false;
         }
+    }
+
+    if (!windowStuff.keyPressedPrev['A'] && windowStuff.keyPressed['A']) {
+        windowStuff.keyPressedPrev['A'] = true;
+        if (ANTI_ALIAS) ANTI_ALIAS = false;
+        else ANTI_ALIAS = true;
     }
 
     // WireFrame Handling
@@ -94,7 +101,7 @@ void onIdle() {
         // }
     }
     // Apply anti-aliasing
-    windowStuff.windowBuffer.fxaa();
+    if (ANTI_ALIAS) windowStuff.windowBuffer.FXAA();
 }
 
 // Win32 function for event handling

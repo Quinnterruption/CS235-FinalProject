@@ -8,6 +8,8 @@
 #include <thread>
 #include <future>
 #include <algorithm>
+#include <cstring>
+#include <iostream>
 
 using std::array;
 
@@ -29,18 +31,45 @@ void WindowBuffer::drawLine(int x1, int y1, int x2, int y2) {
     double m4 = (h - static_cast<double>(y1)) / (0 - static_cast<double>(x1));
 
     if (y1 < 0) {
+        if (y2 < 0) return;
+
+        // double newX = (0 - y1) / m + x1;
+        // if (newX < 0 || newX > w) return;
+        // std::cout << "Old: " << x1 << ' ' << y1 << '\n';
+        // std::cout << "Old: " << x2 << ' ' << y2 << '\n';
+        // x1 = static_cast<int>(newX);
+        // y1 = 0; // TODO -> should be the y value at the new x value
+        // std::cout << "New: " << x1 << ' ' << y1 << '\n';
         if (y2 < 0) return;             // Both out on top
         if (m < m2 && m > m3) return;   // First out on top and no part of the line intersects screen
     }
     if (y1 > h) {
+        if (y2 > h) return;
+
+        // double newX = (h - y1) / m + x1;
+        // if (newX < 0 || newX > w) return;
+        // x1 = static_cast<int>(newX);
+        // y1 = h;
         if (y2 > h) return;             // Both out on bottom
         if (m > m1 && m < m4) return;   // First out on bottom and no part of the line intersects screen
     }
     if (x1 < 0) {
         if (x2 < 0) return;             // Both out on left
         if (m < m3 && m < m4 || m > m3 && m > m4) return;   // First out on left and no part of line intersects screen
+        // if (x2 < 0) return;
+        //
+        // double newY = m * (0 - x1) + y1;
+        // if (newY < 0 || newY > h) return;
+        // x1 = 0;
+        // y1 = static_cast<int>(newY);
     }
     if (x1 > w) {
+        if (x2 > w) return;
+
+        // double newY = m * (w - x1) + y1;
+        // if (newY < 0 || newY > h) return;
+        // x1 = w;
+        // y1 = static_cast<int>(newY);
         if (x2 > w) return;             // Both out on right
         if (m > m1 && m > m2 || m < m1 && m < m2) return;   // First out on right and no part of line intersects screen
     }
@@ -99,6 +128,14 @@ void WindowBuffer::drawLine(int x1, int y1, int x2, int y2) {
         drawAtSafe(x1 + newX, y1 + newY, 0, 255, 0);
 
         if (x1 + newX == x2 && y1 + newY == y2) break;
+        // if (x1 + newX != x1 && (x1 + newX == 0 || x1 + newX == w)) {
+        //     std::cout << "breaking\n";
+        //     break;
+        // }
+        // if (y1 + newY != y1 && (y1 + newY == 0 || y1 + newY == h)) {
+        //     std::cout << "exiting\n";
+        //     break;
+        // }
 
         int checkX = newX + sx;
         int checkY = newY + sy;
@@ -114,6 +151,7 @@ void WindowBuffer::drawLine(int x1, int y1, int x2, int y2) {
                 newX = checkX;
             }
         }
+        // if (i == screenDiagInPixels - 1) std::cout << "WHAT\n";
     }
 }
 
@@ -155,9 +193,9 @@ void WindowBuffer::processThreads(
 
     std::for_each(begin, end, [this, &vertices, location, rotation, rotationPoint](const Triangle& face) {
         drawTriangle(
-            vec3::rotate(vertices[face[0]] + rotationPoint, rotation) + location,
-            vec3::rotate(vertices[face[1]] + rotationPoint, rotation) + location,
-            vec3::rotate(vertices[face[2]] + rotationPoint, rotation) + location);
+            vec3::rotate(vertices[face[0]] + rotationPoint, rotation) + location - rotationPoint,
+            vec3::rotate(vertices[face[1]] + rotationPoint, rotation) + location - rotationPoint,
+            vec3::rotate(vertices[face[2]] + rotationPoint, rotation) + location - rotationPoint);
     });
 }
 
@@ -184,8 +222,47 @@ void WindowBuffer::drawWireframe(const WireFrame& wireframe) {
     for (auto& fut : futures) fut.get();
 }
 
-void WindowBuffer::fxaa() {
-    
+float WindowBuffer::getLuma(const int& color) {
+    return 0.299f * ((color >> 16) & 0xFF) + 0.587f * ((color >> 8) & 0xFF) + 0.114f * ((color >> 0) & 0xFF);
+}
+
+void WindowBuffer::FXAA() {
+    unsigned char* output = new unsigned char[4 * w * h];
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            unsigned int middle, north, east, south, west;
+            memcpy(&middle, &memory[4 * (x + y * w)], 4);
+            memcpy(&north, &memory[4 * (x + (y - 1) * w)], 4);
+            memcpy(&east, &memory[4 * ((x + 1) + y * w)], 4);
+            memcpy(&south, &memory[4 * (x + (y + 1) * w)], 4);
+            memcpy(&west, &memory[4 * ((x - 1) + y * w)], 4);
+
+            float lumaM = getLuma(middle);
+            float lumaN = getLuma(north);
+            float lumaE = getLuma(east);
+            float lumaS = getLuma(south);
+            float lumaW = getLuma(west);
+
+            float lumaMin = std::min({lumaM, lumaN, lumaE, lumaS, lumaW});
+            float lumaMax = std::max({lumaM, lumaN, lumaE, lumaS, lumaW});
+
+            if (lumaMax - lumaMin < 0.0312f) {  // FXAA threshold
+                memcpy(&output[4 * (x + y * w)], &middle, 4);
+            } else {
+                float blurFactor = (lumaN + lumaE + lumaS + lumaW) * 0.25f;
+                float blend = std::abs(blurFactor - lumaM) / (lumaMax - lumaMin);
+                blend = std::clamp(blend, 0.0f, 1.0f);
+
+                output[4 * (x + y * w) + 0] = (1.0f - blend) * ((middle >> 16) & 0xFF) + blend * (((north >> 16) & 0xFF) + ((east >> 16) & 0xFF) + ((south >> 16) & 0xFF) + ((west >> 16) & 0xFF)) * 0.25f;
+                output[4 * (x + y * w) + 1] = (1.0f - blend) * ((middle >> 8) & 0xFF) + blend * (((north >> 8) & 0xFF) + ((east >> 8) & 0xFF) + ((south >> 8) & 0xFF) + ((west >> 8) & 0xFF)) * 0.25f;
+                output[4 * (x + y * w) + 2] = (1.0f - blend) * ((middle >> 0) & 0xFF) + blend * (((north >> 0) & 0xFF) + ((east >> 0) & 0xFF) + ((south >> 0) & 0xFF) + ((west >> 0) & 0xFF)) * 0.25f;
+                output[4 * (x + y * w) + 3] = 0;
+            }
+        }
+    }
+
+    memcpy(memory, output, 4 * w * h);
+    delete[] output;
 }
 
 void resetWindowBuffer(WindowBuffer* windowBuffer, BITMAPINFO* bitmapInfo, HWND hwnd) {

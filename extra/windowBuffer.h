@@ -87,7 +87,9 @@ struct WindowBuffer {
 
     void drawWireframe(const WireFrame& wireframe);
 
-    void fxaa();
+    static float getLuma(const int& color);
+
+    void FXAA();
 };
 
 /**
