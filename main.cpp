@@ -93,6 +93,8 @@ void onIdle() {
         //     windowStuff.playback.update(wireFrame);
         // }
     }
+    // Apply anti-aliasing
+    windowStuff.windowBuffer.fxaa();
 }
 
 // Win32 function for event handling

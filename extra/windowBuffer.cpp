@@ -29,67 +29,65 @@ void WindowBuffer::drawLine(int x1, int y1, int x2, int y2) {
     double m4 = (h - static_cast<double>(y1)) / (0 - static_cast<double>(x1));
 
     if (y1 < 0) {
-        if (y2 < 0) return;
-        if (m < m2 && m > m3) return;
+        if (y2 < 0) return;             // Both out on top
+        if (m < m2 && m > m3) return;   // First out on top and no part of the line intersects screen
     }
     if (y1 > h) {
-        if (y2 > h) return;
-        if (m > m1 && m < m4) return;
+        if (y2 > h) return;             // Both out on bottom
+        if (m > m1 && m < m4) return;   // First out on bottom and no part of the line intersects screen
     }
     if (x1 < 0) {
-        if (x2 < 0) return;
-        if (m < m3 && m < m4 || m > m3 && m > m4) return;
+        if (x2 < 0) return;             // Both out on left
+        if (m < m3 && m < m4 || m > m3 && m > m4) return;   // First out on left and no part of line intersects screen
     }
     if (x1 > w) {
-        if (x2 > w) return;
-        if (m > m1 && m > m2 || m < m1 && m < m2) return;
+        if (x2 > w) return;             // Both out on right
+        if (m > m1 && m > m2 || m < m1 && m < m2) return;   // First out on right and no part of line intersects screen
     }
 
-    if (m != 0) {
-        if (x1 < 0) {
-            double deltaX = -x1;
-            double deltaY = m * deltaX;
-            x1 = 0;
-            y1 += round(deltaY);
-        } else if (x1 > w) {
-            double deltaX = x1 - w;
-            double deltaY = -m * deltaX;
-            x1 = w;
-            y1 += round(deltaY);
-        }
-        if (y1 < 0) {
-            double deltaY = -y1;
-            double deltaX = deltaY / m;
-            y1 = 0;
-            x1 += round(deltaX);
-        } else if (y1 > h) {
-            double deltaY = y1 - h;
-            double deltaX = deltaY / -m;
-            y1 = h;
-            x1 += round(deltaX);
-        }
-        if (x2 < 0) {
-            double deltaX = -x2;
-            double deltaY = m * deltaX;
-            x2 = 0;
-            y2 += round(deltaY);
-        } else if (x2 > w) {
-            double deltaX = x2 - w;
-            double deltaY = -m * deltaX;
-            x2 = w;
-            y2 += round(deltaY);
-        }
-        if (y2 < 0) {
-            double deltaY = -y2;
-            double deltaX = deltaY / m;
-            y2 = 0;
-            x2 += round(deltaX);
-        } else if (y2 > h) {
-            double deltaY = y2 - h;
-            double deltaX = deltaY / -m;
-            y2 = h;
-            x2 += round(deltaX);
-        }
+    if (x1 < 0) {           // First out on left -> offset y1 to be in bounds
+        double deltaX = -x1;
+        double deltaY = m * deltaX;
+        x1 = 0;
+        y1 += round(deltaY);
+    } else if (x1 > w) {    // First out on right -> offset y1 to be in bounds
+        double deltaX = x1 - w;
+        double deltaY = -m * deltaX;
+        x1 = w;
+        y1 += round(deltaY);
+    }
+    if (y1 < 0) {           // First out on top -> offset x1 to be in bounds
+        double deltaY = -y1;
+        double deltaX = deltaY / m;
+        y1 = 0;
+        x1 += round(deltaX);
+    } else if (y1 > h) {    // First out on bottom -> offset x1 to be in bounds
+        double deltaY = y1 - h;
+        double deltaX = deltaY / -m;
+        y1 = h;
+        x1 += round(deltaX);
+    }
+    if (x2 < 0) {
+        double deltaX = -x2;
+        double deltaY = m * deltaX;
+        x2 = 0;
+        y2 += round(deltaY);
+    } else if (x2 > w) {
+        double deltaX = x2 - w;
+        double deltaY = -m * deltaX;
+        x2 = w;
+        y2 += round(deltaY);
+    }
+    if (y2 < 0) {
+        double deltaY = -y2;
+        double deltaX = deltaY / m;
+        y2 = 0;
+        x2 += round(deltaX);
+    } else if (y2 > h) {
+        double deltaY = y2 - h;
+        double deltaX = deltaY / -m;
+        y2 = h;
+        x2 += round(deltaX);
     }
 
     int sx = x1 < x2 ? 1 : -1;
@@ -182,6 +180,10 @@ void WindowBuffer::drawWireframe(const WireFrame& wireframe) {
 
     // Ensure all threads finish
     for (auto& fut : futures) fut.get();
+}
+
+void WindowBuffer::fxaa() {
+    
 }
 
 void resetWindowBuffer(WindowBuffer* windowBuffer, BITMAPINFO* bitmapInfo, HWND hwnd) {

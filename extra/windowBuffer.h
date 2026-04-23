@@ -86,6 +86,8 @@ struct WindowBuffer {
         const Quaternion& rotation);
 
     void drawWireframe(const WireFrame& wireframe);
+
+    void fxaa();
 };
 
 /**
