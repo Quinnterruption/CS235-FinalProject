@@ -12,6 +12,8 @@
  */
 struct WindowBuffer {
     unsigned char* memory = nullptr;
+    unsigned int* fxaaBuffer = nullptr;
+    float* lumaBuffer = nullptr;
     int FOV = 90;
     int w = 0;
     int h = 0;
@@ -51,6 +53,7 @@ struct WindowBuffer {
         unsigned int* pixel = reinterpret_cast<unsigned int*>(memory);
         int totalPixels = w * h;
 
+        #pragma omp parallel for
         for (int i = 0; i < totalPixels; i++) {
             *pixel++ = color;
         }
@@ -78,16 +81,9 @@ struct WindowBuffer {
 
     void drawTriangle(const vec3& a, const vec3& b, const vec3& c);
 
-    void processThreads(
-        std::vector<Triangle>::const_iterator begin,
-        std::vector<Triangle>::const_iterator end,
-        const std::vector<vec3>& vertices,
-        const vec3& location,
-        const Quaternion& rotation);
-
     void drawWireframe(const WireFrame& wireframe);
 
-    static float getLuma(const int& color);
+    static float getLuma(unsigned int color);
 
     void FXAA();
 };

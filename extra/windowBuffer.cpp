@@ -182,23 +182,6 @@ void WindowBuffer::drawTriangle(const vec3& a, const vec3& b, const vec3& c) {
     drawLine(cProjX, cProjY, aProjX, aProjY);
 }
 
-void WindowBuffer::processThreads(
-    std::vector<Triangle>::const_iterator begin,
-    std::vector<Triangle>::const_iterator end,
-    const std::vector<vec3>& vertices,
-    const vec3& location,
-    const Quaternion& rotation) {
-    // Can be used to rotate around a specific point relative to the object
-    vec3 rotationPoint{0, 0, 0};    // 0, 0, 0 spins around the objects centerpoint
-
-    std::for_each(begin, end, [this, &vertices, location, rotation, rotationPoint](const Triangle& face) {
-        drawTriangle(
-            vec3::rotate(vertices[face[0]] + rotationPoint, rotation) + location - rotationPoint,
-            vec3::rotate(vertices[face[1]] + rotationPoint, rotation) + location - rotationPoint,
-            vec3::rotate(vertices[face[2]] + rotationPoint, rotation) + location - rotationPoint);
-    });
-}
-
 void WindowBuffer::drawWireframe(const WireFrame& wireframe) {
     auto& vertices = wireframe.getVertices();
     auto& faces = wireframe.getFaces();
@@ -214,7 +197,12 @@ void WindowBuffer::drawWireframe(const WireFrame& wireframe) {
         auto end = (i == numThreads - 1) ? faces.end() : begin + chunkSize;
 
         futures.push_back(std::async(std::launch::async, [this, begin, end, &vertices, location, rotation] {
-            this->processThreads(begin, end, vertices, location, rotation);
+            std::for_each(begin, end, [this, &vertices, location, rotation](const Triangle& face) {
+                drawTriangle(
+                vec3::rotate(vertices[face[0]], rotation) + location,
+                vec3::rotate(vertices[face[1]], rotation) + location,
+                vec3::rotate(vertices[face[2]], rotation) + location);
+            });
         }));
     }
 
@@ -222,49 +210,57 @@ void WindowBuffer::drawWireframe(const WireFrame& wireframe) {
     for (auto& fut : futures) fut.get();
 }
 
-float WindowBuffer::getLuma(const int& color) {
+float WindowBuffer::getLuma(unsigned int color) {
     return 0.299f * ((color >> 16) & 0xFF) + 0.587f * ((color >> 8) & 0xFF) + 0.114f * ((color >> 0) & 0xFF);
 }
 
 void WindowBuffer::FXAA() {
-    unsigned char* output = new unsigned char[4 * w * h];
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++) {
-            unsigned int middle, north, east, south, west;
-            memcpy(&middle, &memory[4 * (x + y * w)], 4);
-            memcpy(&north, &memory[4 * (x + (y - 1) * w)], 4);
-            memcpy(&east, &memory[4 * ((x + 1) + y * w)], 4);
-            memcpy(&south, &memory[4 * (x + (y + 1) * w)], 4);
-            memcpy(&west, &memory[4 * ((x - 1) + y * w)], 4);
+    unsigned int* pixel = reinterpret_cast<unsigned int*>(memory);
+    int totalPixels = w * h;
 
-            float lumaM = getLuma(middle);
-            float lumaN = getLuma(north);
-            float lumaE = getLuma(east);
-            float lumaS = getLuma(south);
-            float lumaW = getLuma(west);
-
-            float lumaMin = std::min({lumaM, lumaN, lumaE, lumaS, lumaW});
-            float lumaMax = std::max({lumaM, lumaN, lumaE, lumaS, lumaW});
-
-            if (lumaMax - lumaMin < 0.0312f) {  // FXAA threshold
-                memcpy(&output[4 * (x + y * w)], &middle, 4);
-            } else {
-                float blurFactor = (lumaN + lumaE + lumaS + lumaW) * 0.25f;
-                float blend = std::abs(blurFactor - lumaM) / (lumaMax - lumaMin);
-                blend = std::clamp(blend, 0.0f, 1.0f);
-
-                output[4 * (x + y * w) + 0] = (1.0f - blend) * ((middle >> 16) & 0xFF) + blend * (((north >> 16) & 0xFF) + ((east >> 16) & 0xFF) + ((south >> 16) & 0xFF) + ((west >> 16) & 0xFF)) * 0.25f;
-                output[4 * (x + y * w) + 1] = (1.0f - blend) * ((middle >> 8) & 0xFF) + blend * (((north >> 8) & 0xFF) + ((east >> 8) & 0xFF) + ((south >> 8) & 0xFF) + ((west >> 8) & 0xFF)) * 0.25f;
-                output[4 * (x + y * w) + 2] = (1.0f - blend) * ((middle >> 0) & 0xFF) + blend * (((north >> 0) & 0xFF) + ((east >> 0) & 0xFF) + ((south >> 0) & 0xFF) + ((west >> 0) & 0xFF)) * 0.25f;
-                output[4 * (x + y * w) + 3] = 0;
-                // unsigned int newColor = (1.0f - blend) * middle + blend * (north + east + south + west) * 0.25f;
-                // output[4 * (x + y * w)] = newColor;
-            }
-        }
+    #pragma omp parallel for    // Enable use of all available cores
+    for (int i = 0; i < totalPixels; i++) {
+        lumaBuffer[i] = getLuma(pixel[i]);
     }
 
-    memcpy(memory, output, 4 * w * h);
-    delete[] output;
+    #pragma omp parallel for
+    for (int y = 1; y < h - 1; y++) {
+        for (int x = 1; x < w - 1; x++) {
+            int i = y * w + x;
+
+            float lumaM = lumaBuffer[i];
+            float lumaN = lumaBuffer[i - w];
+            float lumaE = lumaBuffer[i + 1];
+            float lumaS = lumaBuffer[i + w];
+            float lumaW = lumaBuffer[i - 1];
+
+            float lumaMin = std::min(lumaN, std::min(lumaN, std::min(lumaE, std::min(lumaS, lumaW))));
+            float lumaMax = std::max(lumaN, std::max(lumaN, std::max(lumaE, std::max(lumaS, lumaW))));
+
+            float range = lumaMax - lumaMin;
+
+            if (range < 0.0312f) {  // FXAA threshold
+                fxaaBuffer[i] = pixel[i];
+                continue;
+            }
+
+            float blend = std::abs(((lumaN + lumaE + lumaS + lumaW) * 0.25f) - lumaM) / range;
+            if (blend > 1.0f) blend = 1.0f;
+
+            unsigned int cN = pixel[i - w], cE = pixel[i + 1], cS = pixel[i + w], cW = pixel[i - 1], cM = pixel[i];
+
+            float avgR = ((cN >> 16 & 0xFF) + (cS >> 16 & 0xFF) + (cE >> 16 & 0xFF) + (cW >> 16 & 0xFF)) * 0.25f;
+            float avgG = ((cN >> 8 & 0xFF)  + (cS >> 8 & 0xFF)  + (cE >> 8 & 0xFF)  + (cW >> 8 & 0xFF))  * 0.25f;
+            float avgB = ((cN & 0xFF)       + (cS & 0xFF)       + (cE & 0xFF)       + (cW & 0xFF))       * 0.25f;
+
+            unsigned int r = static_cast<unsigned int>((1.0f - blend) * (cM >> 16 & 0xFF) + blend * avgR);
+            unsigned int g = static_cast<unsigned int>((1.0f - blend) * (cM >> 8 & 0xFF) + blend * avgG);
+            unsigned int b = static_cast<unsigned int>((1.0f - blend) * (cM & 0xFF) + blend * avgB);
+
+            fxaaBuffer[i] = (r << 16) | (g << 8) | b;
+        }
+    }
+    memcpy(memory, fxaaBuffer, 4 * w * h);
 }
 
 void resetWindowBuffer(WindowBuffer* windowBuffer, BITMAPINFO* bitmapInfo, HWND hwnd) {
@@ -284,6 +280,11 @@ void resetWindowBuffer(WindowBuffer* windowBuffer, BITMAPINFO* bitmapInfo, HWND 
 
     windowBuffer->memory = static_cast<unsigned char*>(VirtualAlloc(nullptr, 4 * windowBuffer->w * windowBuffer->h,
                                                                      MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
+
+    windowBuffer->lumaBuffer = static_cast<float*>(_aligned_malloc(
+        windowBuffer->w * windowBuffer->h * sizeof(unsigned int), 32));
+    windowBuffer->fxaaBuffer = static_cast<unsigned int*>(_aligned_malloc(
+        windowBuffer->w * windowBuffer->h * sizeof(unsigned int), 32));
 
     bitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFO);
     bitmapInfo->bmiHeader.biWidth = windowBuffer->w;

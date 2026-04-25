@@ -22,8 +22,8 @@ struct WindowStuff {
 WindowStuff windowStuff;
 
 constexpr double TPS = 60;
-constexpr bool LIMIT_TPS = true;
-constexpr bool SHOW_FPS = false;
+constexpr bool LIMIT_TPS = false;
+constexpr bool SHOW_FPS = true;
 bool ANTI_ALIAS = false;
 constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
@@ -334,9 +334,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             // Wait until tick interval is met
             QueryPerformanceCounter(&currentTime);
 
-            if (LIMIT_TPS && (currentTime.QuadPart - lastTime.QuadPart) >= ticksPerAction) {
+            if (!LIMIT_TPS || (currentTime.QuadPart - lastTime.QuadPart) >= ticksPerAction) {
                 if (SHOW_FPS) {
-                    std::cout << freq.QuadPart / (currentTime.QuadPart - lastTime.QuadPart) << '\n';  // Output fps
+                    int fps = freq.QuadPart / (currentTime.QuadPart - lastTime.QuadPart);
+                    std::cout << fps << '\n';
                 }
                 onIdle();
                 SendMessage(hwnd, WM_PAINT, 0, 0);
