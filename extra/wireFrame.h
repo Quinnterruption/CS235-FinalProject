@@ -57,7 +57,7 @@ public:
 
     void toggleRotation(int axis);
 
-    void rotate();
+    void rotate(float deltaTime, const float TPS);
 
     [[nodiscard]] const std::vector<vec3>& getVertices() const;
 

@@ -8,11 +8,8 @@
 #include <cmath>
 #include <filesystem>
 
-constexpr float DEGREES = 1.0f;
-constexpr float RADIANS = DEGREES * M_PI / 180.0f;
-const Quaternion quatX = Quaternion::fromAxisAngle(1.0f, 0.0f, 0.0f, RADIANS);
-const Quaternion quatY = Quaternion::fromAxisAngle(0.0f, 1.0f, 0.0f, RADIANS);
-const Quaternion quatZ = Quaternion::fromAxisAngle(0.0f, 0.0f, 1.0f, RADIANS);
+// constexpr float DEGREES = 1.0f;
+constexpr float RADIANS = 1.0f * M_PI / 180.0f;
 
 
 WireFrame::WireFrame() = default;
@@ -26,8 +23,14 @@ void WireFrame::toggleRotation(const int axis) {
     rotateFlags ^= axis;
 }
 
-void WireFrame::rotate() {
+void WireFrame::rotate(float deltaTime, const float TPS) {
     if (rotateFlags == 0) return;
+
+    float theta = RADIANS * deltaTime * TPS;
+
+    const Quaternion quatX = Quaternion::fromAxisAngle(1.0f, 0.0f, 0.0f, theta);
+    const Quaternion quatY = Quaternion::fromAxisAngle(0.0f, 1.0f, 0.0f, theta);
+    const Quaternion quatZ = Quaternion::fromAxisAngle(0.0f, 0.0f, 1.0f, theta);
 
     if ((rotateFlags & rotateX) == rotateX) {   // Rotate around X
         rotation *= quatX;

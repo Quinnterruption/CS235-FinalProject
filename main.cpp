@@ -1,5 +1,7 @@
+#include <atomic>
 #include <windows.h>
 #include <iostream>
+#include <thread>
 #include <vector>
 
 #include "resources/resource.h"
@@ -7,8 +9,11 @@
 #include "extra/windowBuffer.h"
 #include "extra/playback.h"
 
+
+std::atomic running = true;
+CRITICAL_SECTION bufferLock;
+
 struct WindowStuff {
-    bool running = true;
 
     BITMAPINFO bitmapInfo = {};
     WindowBuffer windowBuffer = {};
@@ -22,7 +27,7 @@ struct WindowStuff {
 WindowStuff windowStuff;
 
 constexpr double TPS = 60;
-constexpr bool LIMIT_TPS = false;
+constexpr bool LIMIT_TPS = true;
 constexpr bool SHOW_FPS = true;
 bool ANTI_ALIAS = false;
 constexpr char windowClassName[] = "3D-Renderer";
@@ -41,7 +46,7 @@ WireFrame* selected = nullptr;
 void pressKeys() {
     if (windowStuff.keyPressed[VK_ESCAPE]) {
         if (MessageBox(windowStuff.hwnd, "Quit the program?", "WARNING!", MB_YESNO) == IDYES) {
-            windowStuff.running = false;
+            running = false;
         }
     }
 
@@ -71,7 +76,7 @@ void pressKeys() {
         }
     }
     // Update the cube location
-    selected->updateLocation({moveDistances[2] - moveDistances[0], moveDistances[1] - moveDistances[3], 0});
+    // selected->updateLocation({moveDistances[2] - moveDistances[0], moveDistances[1] - moveDistances[3], 0});
     // Cube rotation toggles
     // This conditional ensures that the key isn't triggered more than once
     if (!windowStuff.keyPressedPrev['X'] && windowStuff.keyPressed['X']) {  // x
@@ -88,43 +93,49 @@ void pressKeys() {
     }
 }
 
-void onIdle() {
-    pressKeys();
-    windowStuff.windowBuffer.clearToBlack();
+void renderThreadProc() {
+    // Capture initial frequency
+    LARGE_INTEGER freq;
+    QueryPerformanceFrequency(&freq);
 
-    // Iterate over all WireFrames, draw to screen, rotate, and record updates
-    for (WireFrame& wireFrame : windowStuff.wireFrames) {
-        windowStuff.windowBuffer.drawWireframe(wireFrame);
-        wireFrame.rotate();
-        // if (windowStuff.playback.recording()) {
-        //     windowStuff.playback.update(wireFrame);
-        // }
-    }
-    // Apply anti-aliasing
-    if (ANTI_ALIAS) windowStuff.windowBuffer.FXAA();
-}
+    // Capture initial time
+    LARGE_INTEGER lastTime, currentTime;
+    QueryPerformanceCounter(&lastTime);
 
-// Win32 function for event handling
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    switch (msg) {
-        // Resize window handling
-        case WM_SIZE: {
-            resetWindowBuffer(&windowStuff.windowBuffer, &windowStuff.bitmapInfo, hwnd);
-            break;
+    float accumulator = 0;
+
+    while (running) {
+        QueryPerformanceCounter(&currentTime);
+        float deltaTime = static_cast<float>(currentTime.QuadPart - lastTime.QuadPart) / freq.QuadPart;
+        lastTime = currentTime;
+
+        accumulator += deltaTime;
+
+        std::cout << "FPS: " << 1 / deltaTime << '\n';
+
+        windowStuff.windowBuffer.clearToBlack();
+
+        // Iterate over all WireFrames, draw to screen, rotate, and record updates
+        for (WireFrame& wireFrame : windowStuff.wireFrames) {
+            wireFrame.rotate(deltaTime, TPS);
+            if (&wireFrame == selected && accumulator >= 1 / TPS) {
+                accumulator = 0.0f;
+                wireFrame.updateLocation({moveDistances[2] - moveDistances[0], moveDistances[1] - moveDistances[3], 0});
+            }
+            // Draw
+            windowStuff.windowBuffer.drawWireframe(wireFrame);
+            // if (windowStuff.playback.recording()) {
+            //     windowStuff.playback.update(wireFrame);
+            // }
         }
-        case WM_SIZING: {
-            InvalidateRect(hwnd, NULL, FALSE);
-            return TRUE;
-        }
-        // Redraw window handling
-        case WM_PAINT: {
-            // Move all this into a RenderFrame function that will calculate the objects
-            // data and also draw to the screen
-            PAINTSTRUCT ps;
-            HDC DeviceContext = BeginPaint(hwnd, &ps);
+        // Apply anti-aliasing
+        if (ANTI_ALIAS) windowStuff.windowBuffer.FXAA();
 
-            HDC hdc = GetDC(hwnd);
+        // Lock the thread;
+        EnterCriticalSection(&bufferLock);
 
+        HDC hdc = GetDC(windowStuff.hwnd);
+        if (hdc) {
             SetStretchBltMode(hdc, COLORONCOLOR);
 
             StretchDIBits(hdc,
@@ -134,7 +145,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                           DIB_RGB_COLORS, SRCCOPY
                           );
 
-            ReleaseDC(hwnd, hdc);
+            ReleaseDC(windowStuff.hwnd, hdc);
+        }
+
+        LeaveCriticalSection(&bufferLock);
+
+        ValidateRect(windowStuff.hwnd, nullptr);
+
+        // if (deltaTime < 1 / TPS) Sleep(1);
+    }
+}
+
+// Win32 function for event handling
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+        // Resize window handling
+        case WM_SIZE: {
+            EnterCriticalSection(&bufferLock);
+
+            resetWindowBuffer(&windowStuff.windowBuffer, &windowStuff.bitmapInfo, hwnd);
+
+            LeaveCriticalSection(&bufferLock);
+            break;
+        }
+        case WM_SIZING: {
+            // Stop windows from doing something
+            return TRUE;
+        }
+        case WM_ERASEBKGND: {
+            // Stop windows from doing something
+            return 1;
+        }
+        // Redraw window handling
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
 
             EndPaint(hwnd, &ps);
             break;
@@ -213,7 +258,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 */
                 case ID_FILE_EXIT:
                     if (MessageBox(hwnd, "Are you sure?", "WARNING!", MB_YESNO) == IDYES) {
-                        windowStuff.running = false;
+                        running = false;
                     }
                     break;
                 default:
@@ -254,7 +299,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_CLOSE:
-            windowStuff.running = false;
+            running = false;
+            DestroyWindow(hwnd);
             break;
         case WM_DESTROY:
             PostQuitMessage(0);
@@ -266,6 +312,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    InitializeCriticalSection(&bufferLock);
+
     WNDCLASSEX wc;
     HWND hwnd;
     MSG Msg;
@@ -294,57 +342,34 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             WS_EX_CLIENTEDGE,
             windowClassName,
             "3D Renderer",
-            WS_OVERLAPPEDWINDOW,
+            WS_OVERLAPPEDWINDOW | WS_VISIBLE,
             CW_USEDEFAULT, CW_USEDEFAULT, START_WIDTH, START_HEIGHT,
             nullptr, nullptr, hInstance, nullptr
             );
 
     windowStuff.hwnd = hwnd;
-    resetWindowBuffer(&windowStuff.windowBuffer, &windowStuff.bitmapInfo, hwnd);
 
     if (hwnd == nullptr) {
         MessageBox(nullptr, "Window Creation Failed!", "ERROR", MB_ICONEXCLAMATION | MB_OK);
         return 0;
     }
 
-    ShowWindow(hwnd, nCmdShow);
-    UpdateWindow(hwnd);
-
     // Playback::replay(hwnd, windowStuff.windowBuffer, lpCmdLine);
 
-    // Capture initial frequency
-    LARGE_INTEGER freq;
-    QueryPerformanceFrequency(&freq);
-    double secondsPerCount = 1.0 / static_cast<double>(freq.QuadPart);
-    double ticksPerAction = static_cast<double>(freq.QuadPart) / TPS;
+    std::thread renderThread(renderThreadProc);
 
-    // Capture initial time
-    LARGE_INTEGER lastTime, currentTime;
-    QueryPerformanceCounter(&lastTime);
-
-    // "Game" Loop
-    while (windowStuff.running) {
-        // Process ALL messages at once
-        while (PeekMessage(&Msg, hwnd, 0, 0, PM_REMOVE)) {
+    while (running) {
+        if (PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE)) {
             TranslateMessage(&Msg);
             DispatchMessage(&Msg);
         }
-
-        if (windowStuff.running) {
-            // Wait until tick interval is met
-            QueryPerformanceCounter(&currentTime);
-
-            if (!LIMIT_TPS || (currentTime.QuadPart - lastTime.QuadPart) >= ticksPerAction) {
-                if (SHOW_FPS) {
-                    int fps = freq.QuadPart / (currentTime.QuadPart - lastTime.QuadPart);
-                    std::cout << fps << '\n';
-                }
-                onIdle();
-                SendMessage(hwnd, WM_PAINT, 0, 0);
-                lastTime = currentTime;
-            }
-        }
+        pressKeys();
     }
 
+    if (renderThread.joinable()) {
+        renderThread.join();
+    }
+
+    DeleteCriticalSection(&bufferLock);
     return Msg.wParam;
 }
