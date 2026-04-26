@@ -28,7 +28,7 @@ WindowStuff windowStuff;
 
 constexpr double TPS = 60;
 constexpr bool LIMIT_TPS = true;
-constexpr bool SHOW_FPS = true;
+constexpr bool SHOW_FPS = false;
 bool ANTI_ALIAS = false;
 constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
@@ -48,6 +48,7 @@ void pressKeys() {
         if (MessageBox(windowStuff.hwnd, "Quit the program?", "WARNING!", MB_YESNO) == IDYES) {
             running = false;
         }
+        windowStuff.keyPressed[VK_ESCAPE] = false;
     }
 
     if (!windowStuff.keyPressedPrev['A'] && windowStuff.keyPressed['A']) {
@@ -111,7 +112,7 @@ void renderThreadProc() {
 
         accumulator += deltaTime;
 
-        std::cout << "FPS: " << 1 / deltaTime << '\n';
+        if constexpr (SHOW_FPS) std::cout << "FPS: " << 1 / deltaTime << '\n';
 
         windowStuff.windowBuffer.clearToBlack();
 
@@ -152,7 +153,7 @@ void renderThreadProc() {
 
         ValidateRect(windowStuff.hwnd, nullptr);
 
-        // if (deltaTime < 1 / TPS) Sleep(1);
+        if constexpr (LIMIT_TPS) if (deltaTime < 1 / TPS) Sleep(1);
     }
 }
 
