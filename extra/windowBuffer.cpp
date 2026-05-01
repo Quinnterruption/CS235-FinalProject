@@ -155,28 +155,12 @@ void WindowBuffer::drawLine(int x1, int y1, int x2, int y2) {
     }
 }
 
-/**
- * Turns 3d world coordinates into 2d screen coordinates
- * @param toMap a vec3 with x, y, z values in world coordinates. Z is treated as distance from the camera
- * @return screen coordinates x, y after projecting from 3d to 2d
- */
-std::pair<int, int> WindowBuffer::projectionMap(const vec3& toMap) const {
-    // if (toMap.z <= 0) return {-1, -1}; // Culls points if they're behind the camera
-
-    /* 3d Projection to 2d Plane */
-    double distToObj = toMap.z <= 0 ? 0.01 : toMap.z;
-    int projectedX = static_cast<int>((toMap.x / distToObj) * distToScreen + midScreenX);
-    int projectedY = static_cast<int>((-toMap.y / distToObj) * distToScreen + midScreenY);
-
-    return {projectedX, projectedY};
-}
-
 void WindowBuffer::drawTriangle(const vec3& a, const vec3& b, const vec3& c) {
     if (a.z <= 0 && b.z <= 0 && c.z <= 0) return;   // Cull points that are all behind the focal point
 
-    auto [aProjX, aProjY] = projectionMap(a);
-    auto [bProjX, bProjY] = projectionMap(b);
-    auto [cProjX, cProjY] = projectionMap(c);
+    auto [aProjX, aProjY] = raycast.projectionMap(a);
+    auto [bProjX, bProjY] = raycast.projectionMap(b);
+    auto [cProjX, cProjY] = raycast.projectionMap(c);
     drawLine(aProjX, aProjY, bProjX, bProjY);
     drawLine(bProjX, bProjY, cProjX, cProjY);
     drawLine(cProjX, cProjY, aProjX, aProjY);
@@ -273,6 +257,10 @@ void resetWindowBuffer(WindowBuffer* windowBuffer, BITMAPINFO* bitmapInfo, HWND 
     windowBuffer->midScreenX = windowBuffer->w / 2.0;
     windowBuffer->midScreenY = windowBuffer->h / 2.0;
     windowBuffer->distToScreen = windowBuffer->midScreenX / tan(windowBuffer->FOV * M_PI / 360.0);
+
+    windowBuffer->raycast.midScreenX = windowBuffer->w / 2.0;
+    windowBuffer->raycast.midScreenY = windowBuffer->h / 2.0;
+    windowBuffer->raycast.distToScreen = windowBuffer->midScreenX / tan(windowBuffer->FOV * M_PI / 360.0);
 
     if (windowBuffer->memory) {
         VirtualFree(windowBuffer->memory, 0, MEM_RELEASE);

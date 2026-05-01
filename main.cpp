@@ -333,7 +333,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_LBUTTONDOWN: {
             int xPos = GET_X_LPARAM(lParam);
             int yPos = GET_Y_LPARAM(lParam);
-            // std::cout << "{" << xPos << ", " << yPos << "}" << '\n';
+            std::cout << "{" << xPos << ", " << yPos << "}" << '\n';
+
 
             break;
         }

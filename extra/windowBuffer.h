@@ -6,6 +6,7 @@
 #define FINALPROJECT_WINDOWBUFFER_H
 #include <Windows.h>
 #include "wireFrame.h"
+#include "includes/raycast.h"
 
 /**
  * A struct to maintain a WindowBuffer and render certain objects
@@ -18,6 +19,7 @@ struct WindowBuffer {
     int w = 0;
     int h = 0;
     int screenDiagInPixels = 0;
+    rndr::Raycast raycast{};
     int midScreenX = 0;
     int midScreenY = 0;
     int distToScreen = 0;
