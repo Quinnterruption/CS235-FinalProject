@@ -59,11 +59,6 @@ void pressKeys() {
 
     // WireFrame Handling
     if (selected == nullptr) return;
-    // Reset wireFrame
-    if (!windowStuff.keyPressedPrev['R'] && windowStuff.keyPressed['R']) {
-        windowStuff.keyPressedPrev['R'] = true;
-        *selected = {cubeFile};
-    }
     // Cube movement Left/Up/Right/Down
     // VK_LEFT is the first of the arrow key macros in Win32
     // This was designed this way to reduce the repetitive code
