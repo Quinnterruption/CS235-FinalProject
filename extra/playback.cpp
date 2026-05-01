@@ -51,6 +51,7 @@ bool Playback::recording() {
     return true;
 }
 
+/*
 void Playback::update(WireFrame wireFrame) {
     if (wireFrame != prevWireFrame) {
         outFile << currentTimeMillis() - startTime << ' '           // Write the time since the start
@@ -59,7 +60,8 @@ void Playback::update(WireFrame wireFrame) {
         prevWireFrame = wireFrame;
     }
 }
-
+*/
+/*
 void Playback::replay(HWND hwnd, WindowBuffer& windowBuffer, std::string filePath) {
     using std::string, std::getline;
     // Check for a valid string and .rndr file extension
@@ -108,3 +110,4 @@ void Playback::replay(HWND hwnd, WindowBuffer& windowBuffer, std::string filePat
         }
     }
 }
+*/

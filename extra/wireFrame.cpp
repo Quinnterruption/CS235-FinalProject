@@ -3,115 +3,124 @@
 //
 
 #include "wireFrame.h"
+
+#include <algorithm>
 #include <cmath>
+#include <filesystem>
 
-constexpr double DEGREES = 2;
-constexpr double THETA = DEGREES * M_PI / 180.0;
-
-const static matrix3 xRotate = {{{1.0, 0.0, 0.0},
-                        {0.0, cos(THETA), -sin(THETA)},
-                        {0.0, sin(THETA), cos(THETA)}}};
-const static matrix3 yRotate = {{{cos(THETA), 0.0, sin(THETA)},
-                        {0.0, 1.0, 0.0},
-                        {-sin(THETA), 0.0, cos(THETA)}}};
-const static matrix3 zRotate = {{{cos(THETA), -sin(THETA), 0.0},
-                        {sin(THETA), cos(THETA), 0.0},
-                        {0.0, 0.0, 1.0}}};
+// constexpr float DEGREES = 1.0f;
+constexpr float RADIANS = 1.0f * M_PI / 180.0f;
 
 
-int WireFrame::getRotation() {
-    return rotateFlags;
-}
+WireFrame::WireFrame() = default;
 
-void WireFrame::setRotation(const int axis) {
-    rotateFlags = axis;
+
+WireFrame::WireFrame(const std::string& fileName) {
+    setWireFrame(fileName);
 }
 
 void WireFrame::toggleRotation(const int axis) {
     rotateFlags ^= axis;
 }
 
-void WireFrame::rotate() {
-    if (rotateFlags == 0) return;   // Prevent unnecessary calculations
+void WireFrame::rotate(float deltaTime, const float TPS) {
+    if (rotateFlags == 0) return;
 
-    // Create default 3D matrix
-    matrix3 rotateMatrix = {{{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}}};
-    if ((rotateFlags & rotateX) == rotateX) {   // Check for rotation around X-axis
-        rotateMatrix = matrixMult(rotateMatrix, xRotate);   // Multiply matrices
-    }
-    if ((rotateFlags & rotateY) == rotateY) {   // Check for rotation around Y-axis
-        rotateMatrix = matrixMult(rotateMatrix, yRotate);   // Multiply matrices
-    }
-    if ((rotateFlags & rotateZ) == rotateZ) {   // Check for rotation around Z-axis
-        rotateMatrix = matrixMult(rotateMatrix, zRotate);   // Multiply matrices
-    }
+    float theta = RADIANS * deltaTime * TPS;
 
-    array<coord, 8> newCoord;  // New coordinate array
-    for (int i = 0; i < newCoord.size(); i++) {
-        coordinates[i] -= midPoint; // Center the object around the origin of the screen (top left)
+    const Quaternion quatX = Quaternion::fromAxisAngle(1.0f, 0.0f, 0.0f, theta);
+    const Quaternion quatY = Quaternion::fromAxisAngle(0.0f, 1.0f, 0.0f, theta);
+    const Quaternion quatZ = Quaternion::fromAxisAngle(0.0f, 0.0f, 1.0f, theta);
 
-        for (int j = 0; j < 3; j++) {
-            // Matrix multiplication to get the new coordinates
-            newCoord[i][j] = coordinates[i][0] * rotateMatrix[j][0] + coordinates[i][1] * rotateMatrix[j][1] + coordinates[i][2] * rotateMatrix[j][2];
+    if ((rotateFlags & rotateX) == rotateX) {   // Rotate around X
+        rotation *= quatX;
+    }
+    if ((rotateFlags & rotateY) == rotateY) {   // Rotate around Y
+        rotation *= quatY;
+    }
+    if ((rotateFlags & rotateZ) == rotateZ) {   // Rotate around Z
+        rotation *= quatZ;
+    }
+    rotation.normalize();
+}
+
+void WireFrame::setWireFrame(const std::string& fileName) {
+    using namespace std;
+    clearWireFrame();
+
+    filesystem::path filePath = filesystem::absolute(fileName);
+
+    ifstream file(filePath);
+    if (!file.is_open()) throw invalid_argument("Could not open file");
+
+    while (file.peek() != EOF) {
+        string line;
+        getline(file >> ws, line);
+
+        /* Remove repeated spaces */
+        auto newEnd = ranges::unique(line,
+            [](const char lhs, const char rhs) { return (lhs == rhs) && (lhs == ' '); }).begin();
+        line.erase(newEnd, line.end());
+
+        bool isVertex = line[0] == 'v' && line[1] == ' ';
+        bool isNormal = line[0] == 'v' && line[1] == 'n';   // Unimplemented
+        bool isFace = line[0] == 'f' && line[1] == ' ';
+
+        auto space = line.find(' ');
+        line = line.substr(space + 1);
+
+        if (isVertex) {
+            vec3 vertex{};
+            for (int i = 0; i < 3; i++) {
+                space = line.find(' ');
+                vertex[i] = stof(line.substr(0, space));
+                line = line.substr(space + 1);
+            }
+            vertices.emplace_back(vertex);
+        } else if (isFace) {
+            Triangle face{};
+            for (int i = 0; i < 3; i++) {
+                space = line.find(' ');
+                face[i] = stoi(line.substr(0, space)) - 1;
+                line = line.substr(space + 1);
+            }
+            faces.emplace_back(face);
         }
-        newCoord[i] += midPoint;    // Center the object around the origin of the object (midpoint)
     }
-    coordinates = newCoord; // Set the coordinates
+
+    setMidpoint();
 }
 
-coord WireFrame::getOrigin() {
-    double x = (coordinates[0][0] + coordinates[5][0]) / 2.0;
-    double y = (coordinates[0][1] + coordinates[5][1]) / 2.0;
-    double z = (coordinates[0][2] + coordinates[5][2]) / 2.0;
-
-    return {x, y, z};
+void WireFrame::clearWireFrame() {
+    vertices.clear();
+    faces.clear();
+    midpoint = vec3{};
 }
 
-matrix3 WireFrame::matrixMult(const matrix3& first, const matrix3& second) {
-    matrix3 result = {};    // Create new 3D matrix
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            // Basic matrix multiplication
-            result[i][j] = first[i][0] * second[0][j] + first[i][1] * second[1][j] + first[i][2] * second[2][j];
-        }
+
+void WireFrame::setMidpoint() {
+    /* Find midpoint */
+    for (const auto& vertex : vertices) {
+        midpoint.x += vertex.x;
+        midpoint.y += vertex.y;
+        midpoint.z += vertex.z;
     }
-    return result;
-}
+    midpoint.x /= vertices.size();
+    midpoint.y /= vertices.size();
+    midpoint.z /= vertices.size();
 
-void WireFrame::updateLocation(const coord &amount) {
-    if (amount == coord{0, 0, 0}) return;
-    for (int i = 0; i < 8; i++) {
-        coordinates[i] += amount;
+    /* Offset all points to have a midpoint of 0, 0, 0 */
+    for (auto& vertex : vertices) {
+        vertex -= midpoint;
     }
-    midPoint += amount;
+    midpoint = {0, 0, 0};
 }
 
-WireFrame::WireFrame(const std::initializer_list<coord> init) {
-    if (init.size() != 8) {
-        throw std::invalid_argument("Coordinates must have exactly 8 elements");
-    }
-    std::copy(init.begin(), init.end(), coordinates.begin());
-    width = abs(static_cast<int>(coordinates[0][0] - coordinates[1][0]));
-    height = abs(static_cast<int>(coordinates[3][1] - coordinates[4][1]));
-    depth = abs(static_cast<int>(coordinates[1][2] - coordinates[2][2]));
-    midPoint = getOrigin();
+
+void WireFrame::updateLocation(const vec3& change) {
+    midpoint += change;
 }
 
-WireFrame::WireFrame(const coord &topLeft, double width, double height, double depth) : width(width), height(height), depth(depth){
-    for (coord& coordinate : coordinates) {
-        coordinate = topLeft;
-    }
-    coordinates[1] += {width, 0, 0};
-    coordinates[2] += {width, 0, depth};
-    coordinates[3] += {0, 0, depth};
-    coordinates[4] += {0, height, depth};
-    coordinates[5] += {width, height, depth};
-    coordinates[6] += {width, height, 0};
-    coordinates[7] += {0, height, 0};
-    midPoint = getOrigin();
-}
+const std::vector<vec3>& WireFrame::getVertices() const { return vertices; }
 
-bool WireFrame::operator==(const WireFrame &obj) const {
-    return width == obj.width && height == obj.height && depth == obj.depth &&
-        midPoint == obj.midPoint && rotateFlags == obj.rotateFlags;
-}
+const std::vector<Triangle>& WireFrame::getFaces() const { return faces; }

@@ -1,5 +1,7 @@
+#include <atomic>
 #include <windows.h>
 #include <iostream>
+#include <thread>
 #include <vector>
 
 #include "resources/resource.h"
@@ -7,8 +9,11 @@
 #include "extra/windowBuffer.h"
 #include "extra/playback.h"
 
+
+std::atomic running = true;
+CRITICAL_SECTION bufferLock;
+
 struct WindowStuff {
-    bool running = true;
 
     BITMAPINFO bitmapInfo = {};
     WindowBuffer windowBuffer = {};
@@ -20,26 +25,44 @@ struct WindowStuff {
 };
 
 WindowStuff windowStuff;
-RECT rect = {};
 
+constexpr double TPS = 60;
+constexpr bool LIMIT_TPS = true;
+constexpr bool SHOW_FPS = false;
+bool ANTI_ALIAS = false;
 constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
-int windowWidth, windowHeight;
-constexpr double moveAccel = 1.2f;
-constexpr double maxSpeed = 10.0f;
-double moveDistances[4];
-WireFrame initWireFrame = {coord{-50, -50, 200}, 100, 100, 100};
+constexpr float moveAccel = 1.2f;   // Should be refactored to WireFrame
+constexpr float maxSpeed = 4.0f;    // Should be refactored to WireFrame
+float moveDistances[4];             // Should be refactored to WireFrame
+
+std::string cubeFile = R"(..\extra\base-objs\cube.obj)";
+std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
+std::string sphereFile = R"(..\extra\base-objs\sphere.obj)";
+std::string testFile = R"(..\extra\base-objs\test.obj)";
+std::string pyramidFile = R"(..\extra\base-objs\pyramid.obj)";
+WireFrame* selected = nullptr;
 
 void pressKeys() {
     if (windowStuff.keyPressed[VK_ESCAPE]) {
         if (MessageBox(windowStuff.hwnd, "Quit the program?", "WARNING!", MB_YESNO) == IDYES) {
-            windowStuff.running = false;
+            running = false;
         }
+        windowStuff.keyPressed[VK_ESCAPE] = false;
     }
+
+    if (!windowStuff.keyPressedPrev['A'] && windowStuff.keyPressed['A']) {
+        windowStuff.keyPressedPrev['A'] = true;
+        if (ANTI_ALIAS) ANTI_ALIAS = false;
+        else ANTI_ALIAS = true;
+    }
+
+    // WireFrame Handling
+    if (selected == nullptr) return;
     // Reset wireFrame
     if (!windowStuff.keyPressedPrev['R'] && windowStuff.keyPressed['R']) {
         windowStuff.keyPressedPrev['R'] = true;
-        windowStuff.wireFrames[0] = initWireFrame;
+        *selected = {cubeFile};
     }
     // Cube movement Left/Up/Right/Down
     // VK_LEFT is the first of the arrow key macros in Win32
@@ -48,45 +71,89 @@ void pressKeys() {
         if (!windowStuff.keyPressedPrev[i + VK_LEFT]) moveDistances[i] = 1.0;
         if (windowStuff.keyPressed[i + VK_LEFT]) {
             windowStuff.keyPressedPrev[i + VK_LEFT] = true;
-            moveDistances[i] = std::min(1 + maxSpeed, moveDistances[i] * moveAccel);
+            if (moveDistances[i] < 1 + maxSpeed) {
+                moveDistances[i] *= moveAccel;
+            }
         }
     }
     // Update the cube location
-    windowStuff.wireFrames[0].updateLocation({moveDistances[2] - moveDistances[0], moveDistances[1] - moveDistances[3], 0});
+    // selected->updateLocation({moveDistances[2] - moveDistances[0], moveDistances[1] - moveDistances[3], 0});
     // Cube rotation toggles
     // This conditional ensures that the key isn't triggered more than once
     if (!windowStuff.keyPressedPrev['X'] && windowStuff.keyPressed['X']) {  // x
         windowStuff.keyPressedPrev['X'] = true;
-        windowStuff.wireFrames[0].toggleRotation(rotateX);
+        selected->toggleRotation(rotateX);
     }
     if (!windowStuff.keyPressedPrev['Y'] && windowStuff.keyPressed['Y']) {  // y
         windowStuff.keyPressedPrev['Y'] = true;
-        windowStuff.wireFrames[0].toggleRotation(rotateY);
+        selected->toggleRotation(rotateY);
     }
     if (!windowStuff.keyPressedPrev['Z'] && windowStuff.keyPressed['Z']) {  // z
         windowStuff.keyPressedPrev['Z'] = true;
-        windowStuff.wireFrames[0].toggleRotation(rotateZ);
+        selected->toggleRotation(rotateZ);
     }
 }
 
-void onIdle(int w, int h, WindowBuffer& windowBuffer) {
-    pressKeys();
-    windowBuffer.clear();
+void renderThreadProc() {
+    // Capture initial frequency
+    LARGE_INTEGER freq;
+    QueryPerformanceFrequency(&freq);
 
-    /*
-    for (int i = 0; i < gameWindowBuffer.w; i++) {
-        for (int j = 0; j < gameWindowBuffer.h; j++) {
-            gameWindowBuffer.drawAtSafe(i, j, i % 256, j % 256, (i * j) % 256);
+    // Capture initial time
+    LARGE_INTEGER lastTime, currentTime;
+    QueryPerformanceCounter(&lastTime);
+
+    float accumulator = 0;
+
+    while (running) {
+        QueryPerformanceCounter(&currentTime);
+        float deltaTime = static_cast<float>(currentTime.QuadPart - lastTime.QuadPart) / freq.QuadPart;
+        lastTime = currentTime;
+
+        accumulator += deltaTime;
+
+        if constexpr (SHOW_FPS) std::cout << "FPS: " << 1 / deltaTime << '\n';
+
+        windowStuff.windowBuffer.clearToBlack();
+
+        // Iterate over all WireFrames, draw to screen, rotate, and record updates
+        for (WireFrame& wireFrame : windowStuff.wireFrames) {
+            wireFrame.rotate(deltaTime, TPS);
+            if (&wireFrame == selected && accumulator >= 1 / TPS) {
+                accumulator = 0.0f;
+                wireFrame.updateLocation({moveDistances[2] - moveDistances[0], moveDistances[1] - moveDistances[3], 0});
+            }
+            // Draw
+            windowStuff.windowBuffer.drawWireframe(wireFrame);
+            // if (windowStuff.playback.recording()) {
+            //     windowStuff.playback.update(wireFrame);
+            // }
         }
-    }
-    */
-    // Iterate over all WireFrames, draw to screen, rotate, and record updates
-    for (WireFrame& wireFrame : windowStuff.wireFrames) {
-        windowBuffer.drawCube(wireFrame);
-        wireFrame.rotate();
-        if (windowStuff.playback.recording()) {
-            windowStuff.playback.update(wireFrame);
+        // Apply anti-aliasing
+        if (ANTI_ALIAS) windowStuff.windowBuffer.FXAA();
+
+        // Lock the thread;
+        EnterCriticalSection(&bufferLock);
+
+        HDC hdc = GetDC(windowStuff.hwnd);
+        if (hdc) {
+            SetStretchBltMode(hdc, COLORONCOLOR);
+
+            StretchDIBits(hdc,
+                          0, 0, windowStuff.windowBuffer.w, windowStuff.windowBuffer.h,
+                          0, 0, windowStuff.windowBuffer.w, windowStuff.windowBuffer.h,
+                          windowStuff.windowBuffer.memory, &windowStuff.bitmapInfo,
+                          DIB_RGB_COLORS, SRCCOPY
+                          );
+
+            ReleaseDC(windowStuff.hwnd, hdc);
         }
+
+        LeaveCriticalSection(&bufferLock);
+
+        ValidateRect(windowStuff.hwnd, nullptr);
+
+        if constexpr (LIMIT_TPS) if (deltaTime < 1 / TPS) Sleep(1);
     }
 }
 
@@ -95,29 +162,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         // Resize window handling
         case WM_SIZE: {
-            GetClientRect(hwnd, &rect);
-            windowHeight = rect.bottom;
-            windowWidth = rect.right;
+            EnterCriticalSection(&bufferLock);
+
             resetWindowBuffer(&windowStuff.windowBuffer, &windowStuff.bitmapInfo, hwnd);
+
+            LeaveCriticalSection(&bufferLock);
             break;
+        }
+        case WM_SIZING: {
+            // Stop windows from doing something
+            return TRUE;
+        }
+        case WM_ERASEBKGND: {
+            // Stop windows from doing something
+            return 1;
         }
         // Redraw window handling
         case WM_PAINT: {
             PAINTSTRUCT ps;
-            HDC DeviceContext = BeginPaint(hwnd, &ps);
-
-            HDC hdc = GetDC(hwnd);
-
-            // Need to implement CreateDIBSection to allow the use of double buffering
-            // StretchDIBits will happen after CreateDIBSection does its job
-            StretchDIBits(hdc,
-                          0, 0, windowStuff.windowBuffer.w, windowStuff.windowBuffer.h,
-                          0, 0, windowStuff.windowBuffer.w, windowStuff.windowBuffer.h,
-                          windowStuff.windowBuffer.memory, &windowStuff.bitmapInfo,
-                          DIB_RGB_COLORS, SRCCOPY
-                          );
-
-            ReleaseDC(hwnd, hdc);
+            HDC hdc = BeginPaint(hwnd, &ps);
 
             EndPaint(hwnd, &ps);
             break;
@@ -158,7 +221,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             switch(LOWORD(wParam)) {
                 case ID_FILE_NEW_CUBE: {
                     // DialogBox(nullptr, MAKEINTRESOURCE(IDD_MYDIALOG), hwnd, (DLGPROC)DeleteItemProc);
-                    windowStuff.wireFrames.emplace_back(coord{400, 300, 1000}, 100, 100, 100);
+                    windowStuff.wireFrames.emplace_back(cubeFile);
+                    selected = &windowStuff.wireFrames.back();
+                    break;
+                }
+                case ID_FILE_NEW_SPHERE: {
+                    windowStuff.wireFrames.emplace_back(sphereFile);
+                    selected = &windowStuff.wireFrames.back();
+                    break;
+                }
+                case ID_FILE_NEW_CYLINDER: {
+                    windowStuff.wireFrames.emplace_back(cylFile);
+                    selected = &windowStuff.wireFrames.back();
+                    break;
+                }
+                case ID_FILE_NEW_PYRAMID: {
+                    windowStuff.wireFrames.emplace_back(pyramidFile);
+                    selected = &windowStuff.wireFrames.back();
                     break;
                 }
                 case ID_FILE_RECORD_TEN: {
@@ -180,7 +259,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 */
                 case ID_FILE_EXIT:
                     if (MessageBox(hwnd, "Are you sure?", "WARNING!", MB_YESNO) == IDYES) {
-                        windowStuff.running = false;
+                        running = false;
                     }
                     break;
                 default:
@@ -202,15 +281,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_MOUSEWHEEL: {
             short delta = GET_WHEEL_DELTA_WPARAM(wParam);
             if (delta > 0) {
-                windowStuff.wireFrames[0].updateLocation({0, 0, -20});
-            }
-            if (delta < 0) {
-                windowStuff.wireFrames[0].updateLocation({0, 0, 20});
+                if (selected == nullptr) {
+                    for (auto& wireFrame : windowStuff.wireFrames) {
+                        wireFrame.updateLocation({0, 0, -20});
+                    }
+                } else {
+                    selected->updateLocation({0, 0, -20});
+                }
+            } else if (delta < 0) {
+                if (selected == nullptr) {
+                    for (auto& wireFrame : windowStuff.wireFrames) {
+                        wireFrame.updateLocation({0, 0, 20});
+                    }
+                } else {
+                    selected->updateLocation({0, 0, 20});
+                }
             }
             break;
         }
         case WM_CLOSE:
-            windowStuff.running = false;
+            running = false;
+            DestroyWindow(hwnd);
             break;
         case WM_DESTROY:
             PostQuitMessage(0);
@@ -222,6 +313,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    InitializeCriticalSection(&bufferLock);
+
     WNDCLASSEX wc;
     HWND hwnd;
     MSG Msg;
@@ -250,35 +343,34 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             WS_EX_CLIENTEDGE,
             windowClassName,
             "3D Renderer",
-            WS_OVERLAPPEDWINDOW,
+            WS_OVERLAPPEDWINDOW | WS_VISIBLE,
             CW_USEDEFAULT, CW_USEDEFAULT, START_WIDTH, START_HEIGHT,
             nullptr, nullptr, hInstance, nullptr
             );
 
     windowStuff.hwnd = hwnd;
-    resetWindowBuffer(&windowStuff.windowBuffer, &windowStuff.bitmapInfo, hwnd);
 
     if (hwnd == nullptr) {
         MessageBox(nullptr, "Window Creation Failed!", "ERROR", MB_ICONEXCLAMATION | MB_OK);
         return 0;
     }
 
-    ShowWindow(hwnd, nCmdShow);
-    UpdateWindow(hwnd);
+    // Playback::replay(hwnd, windowStuff.windowBuffer, lpCmdLine);
 
-    Playback::replay(hwnd, windowStuff.windowBuffer, lpCmdLine);
+    std::thread renderThread(renderThreadProc);
 
-    windowStuff.wireFrames.emplace_back(initWireFrame);
-    // "Game" Loop
-    while (windowStuff.running) {
-        if (PeekMessage(&Msg, hwnd, 0, 0, PM_REMOVE)) {
+    while (running) {
+        if (PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE)) {
             TranslateMessage(&Msg);
             DispatchMessage(&Msg);
-        } else {
-            onIdle(windowWidth, windowHeight, windowStuff.windowBuffer);
-            SendMessage(hwnd, WM_PAINT, 0, 0);
         }
+        pressKeys();
     }
 
+    if (renderThread.joinable()) {
+        renderThread.join();
+    }
+
+    DeleteCriticalSection(&bufferLock);
     return Msg.wParam;
 }
