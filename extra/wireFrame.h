@@ -10,6 +10,7 @@
 #include "includes/vec3.h"
 #include "includes/quaternion.h"
 #include "includes/triangle.h"
+#include "AABB.h"
 
 
 using rndr::vec3, rndr::Triangle, rndr::Quaternion;
@@ -23,7 +24,7 @@ enum rotationFlags {
     rotateZ = 4
 };
 
-class WireFrame {
+class WireFrame : public AABB {
     std::vector<vec3> vertices;
     std::vector<Triangle> faces;
     vec3 midpoint{};

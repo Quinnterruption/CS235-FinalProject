@@ -134,7 +134,9 @@ void renderThreadProc() {
                 wireFrame.updateLocation({moveDistances[2] - moveDistances[0], moveDistances[1] - moveDistances[3], 0});
             }
             // Draw
+            EnterCriticalSection(&bufferLock);
             windowStuff.windowBuffer.drawWireframe(wireFrame);
+            LeaveCriticalSection(&bufferLock);
             // if (windowStuff.playback.recording()) {
             //     windowStuff.playback.update(wireFrame);
             // }
@@ -147,11 +149,11 @@ void renderThreadProc() {
         });
         LeaveCriticalSection(&vectorLock);
 
-        // Apply anti-aliasing
-        if (ANTI_ALIAS) windowStuff.windowBuffer.FXAA();
-
         // Lock the thread;
         EnterCriticalSection(&bufferLock);
+
+        // Apply anti-aliasing
+        if (ANTI_ALIAS) windowStuff.windowBuffer.FXAA();
 
         if (HDC hdc = GetDC(windowStuff.hwnd)) {
             SetStretchBltMode(hdc, COLORONCOLOR);
@@ -336,14 +338,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (windowStuff.wireFrames.empty()) break;
 
+            bool noHits = true;
             for (auto& wireFrame : windowStuff.wireFrames) {
                 vec3 coords = windowStuff.windowBuffer.raycast.project(
-                    {xPos, yPos}, wireFrame.getLocation().z);
+                    {xPos, yPos}, wireFrame.min.z);
                 // std::cout << '{' << coords.x << ", " << coords.y << ", " << coords.z << "}\n";
-                // if (wireFrame.intersects(coords)) {
-                //     std::cout << "Hit!\n";
-                // }
+                if (wireFrame.intersects(coords)) {
+                    selected = &wireFrame;
+                    noHits = false;
+                    // std::cout << "Hit!\n";
+                }
             }
+            if (noHits) selected = nullptr;
 
             break;
         }
