@@ -60,7 +60,6 @@ void pressKeys() {
         else ANTI_ALIAS = true;
     }
 
-
     // WireFrame Handling
     if (selected == nullptr) return;
     // Delete WireFrame
