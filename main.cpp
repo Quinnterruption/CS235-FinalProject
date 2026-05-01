@@ -109,7 +109,9 @@ void renderThreadProc() {
 
         if constexpr (SHOW_FPS) std::cout << "FPS: " << 1 / deltaTime << '\n';
 
+        EnterCriticalSection(&bufferLock);
         windowStuff.windowBuffer.clearToBlack();
+        LeaveCriticalSection(&bufferLock);
 
         // Iterate over all WireFrames, draw to screen, rotate, and record updates
         for (WireFrame& wireFrame : windowStuff.wireFrames) {
