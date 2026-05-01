@@ -60,6 +60,7 @@ void pressKeys() {
         else ANTI_ALIAS = true;
     }
 
+
     // WireFrame Handling
     if (selected == nullptr) return;
     // Delete WireFrame
@@ -122,6 +123,8 @@ void renderThreadProc() {
         EnterCriticalSection(&bufferLock);
         windowStuff.windowBuffer.clearToBlack();
         LeaveCriticalSection(&bufferLock);
+
+        /* Copy the current status of wireframes to avoid issues when deleting objects */
 
         // Iterate over all WireFrames, draw to screen, rotate, and record updates
         for (WireFrame& wireFrame : windowStuff.wireFrames) {
