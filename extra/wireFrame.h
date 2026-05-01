@@ -33,6 +33,7 @@ class WireFrame {
     void setMidpoint();
 
 public:
+    bool isExpired = false;
 
     WireFrame();
 

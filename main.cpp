@@ -1,5 +1,6 @@
 #include <atomic>
 #include <windows.h>
+#include <windowsx.h>
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -12,6 +13,7 @@
 
 std::atomic running = true;
 CRITICAL_SECTION bufferLock;
+CRITICAL_SECTION vectorLock;
 
 struct WindowStuff {
 
@@ -42,6 +44,7 @@ std::string sphereFile = R"(..\extra\base-objs\sphere.obj)";
 std::string testFile = R"(..\extra\base-objs\test.obj)";
 std::string pyramidFile = R"(..\extra\base-objs\pyramid.obj)";
 WireFrame* selected = nullptr;
+std::vector<WireFrame*> multiSelect;
 
 void pressKeys() {
     if (windowStuff.keyPressed[VK_ESCAPE]) {
@@ -51,18 +54,23 @@ void pressKeys() {
         windowStuff.keyPressed[VK_ESCAPE] = false;
     }
 
-    if (!windowStuff.keyPressedPrev['A'] && windowStuff.keyPressed['A']) {
+    if (windowStuff.keyPressed['A'] && !windowStuff.keyPressedPrev['A']) {
         windowStuff.keyPressedPrev['A'] = true;
         if (ANTI_ALIAS) ANTI_ALIAS = false;
         else ANTI_ALIAS = true;
     }
 
+
     // WireFrame Handling
     if (selected == nullptr) return;
-    // Reset wireFrame
-    if (!windowStuff.keyPressedPrev['R'] && windowStuff.keyPressed['R']) {
-        windowStuff.keyPressedPrev['R'] = true;
-        *selected = {cubeFile};
+    // Delete WireFrame
+    if (windowStuff.keyPressed[VK_DELETE]) {
+        EnterCriticalSection(&vectorLock);
+        selected->isExpired = true;     // Expire current wireFrame
+        LeaveCriticalSection(&vectorLock);
+
+        selected = nullptr;
+        return;
     }
     // Cube movement Left/Up/Right/Down
     // VK_LEFT is the first of the arrow key macros in Win32
@@ -76,19 +84,17 @@ void pressKeys() {
             }
         }
     }
-    // Update the cube location
-    // selected->updateLocation({moveDistances[2] - moveDistances[0], moveDistances[1] - moveDistances[3], 0});
     // Cube rotation toggles
     // This conditional ensures that the key isn't triggered more than once
-    if (!windowStuff.keyPressedPrev['X'] && windowStuff.keyPressed['X']) {  // x
+    if (windowStuff.keyPressed['X'] && !windowStuff.keyPressedPrev['X']) {  // x
         windowStuff.keyPressedPrev['X'] = true;
         selected->toggleRotation(rotateX);
     }
-    if (!windowStuff.keyPressedPrev['Y'] && windowStuff.keyPressed['Y']) {  // y
+    if (windowStuff.keyPressed['Y'] && !windowStuff.keyPressedPrev['Y']) {  // y
         windowStuff.keyPressedPrev['Y'] = true;
         selected->toggleRotation(rotateY);
     }
-    if (!windowStuff.keyPressedPrev['Z'] && windowStuff.keyPressed['Z']) {  // z
+    if (windowStuff.keyPressed['Z'] && !windowStuff.keyPressedPrev['Z']) {  // z
         windowStuff.keyPressedPrev['Z'] = true;
         selected->toggleRotation(rotateZ);
     }
@@ -116,8 +122,12 @@ void renderThreadProc() {
 
         windowStuff.windowBuffer.clearToBlack();
 
+        /* Copy the current status of wireframes to avoid issues when deleting objects */
+
         // Iterate over all WireFrames, draw to screen, rotate, and record updates
         for (WireFrame& wireFrame : windowStuff.wireFrames) {
+            if (wireFrame.isExpired) continue;
+
             wireFrame.rotate(deltaTime, TPS);
             if (&wireFrame == selected && accumulator >= 1 / TPS) {
                 accumulator = 0.0f;
@@ -129,6 +139,14 @@ void renderThreadProc() {
             //     windowStuff.playback.update(wireFrame);
             // }
         }
+
+        /* Remove expired wireFrames */
+        EnterCriticalSection(&vectorLock);
+        std::erase_if(windowStuff.wireFrames, [](const WireFrame& wireFrame) {
+            return wireFrame.isExpired;
+        });
+        LeaveCriticalSection(&vectorLock);
+
         // Apply anti-aliasing
         if (ANTI_ALIAS) windowStuff.windowBuffer.FXAA();
 
@@ -221,22 +239,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             switch(LOWORD(wParam)) {
                 case ID_FILE_NEW_CUBE: {
                     // DialogBox(nullptr, MAKEINTRESOURCE(IDD_MYDIALOG), hwnd, (DLGPROC)DeleteItemProc);
+                    EnterCriticalSection(&vectorLock);
                     windowStuff.wireFrames.emplace_back(cubeFile);
+                    LeaveCriticalSection(&vectorLock);
+
                     selected = &windowStuff.wireFrames.back();
                     break;
                 }
                 case ID_FILE_NEW_SPHERE: {
+                    EnterCriticalSection(&vectorLock);
                     windowStuff.wireFrames.emplace_back(sphereFile);
+                    LeaveCriticalSection(&vectorLock);
+
                     selected = &windowStuff.wireFrames.back();
                     break;
                 }
                 case ID_FILE_NEW_CYLINDER: {
+                    EnterCriticalSection(&vectorLock);
                     windowStuff.wireFrames.emplace_back(cylFile);
+                    LeaveCriticalSection(&vectorLock);
+
                     selected = &windowStuff.wireFrames.back();
                     break;
                 }
                 case ID_FILE_NEW_PYRAMID: {
+                    EnterCriticalSection(&vectorLock);
                     windowStuff.wireFrames.emplace_back(pyramidFile);
+                    LeaveCriticalSection(&vectorLock);
+
                     selected = &windowStuff.wireFrames.back();
                     break;
                 }
@@ -299,6 +329,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        // Left click handling
+        case WM_LBUTTONDOWN: {
+            int xPos = GET_X_LPARAM(lParam);
+            int yPos = GET_Y_LPARAM(lParam);
+            // std::cout << "{" << xPos << ", " << yPos << "}" << '\n';
+
+            break;
+        }
         case WM_CLOSE:
             running = false;
             DestroyWindow(hwnd);
@@ -314,6 +352,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     InitializeCriticalSection(&bufferLock);
+    InitializeCriticalSection(&vectorLock);
 
     WNDCLASSEX wc;
     HWND hwnd;
