@@ -120,9 +120,9 @@ void renderThreadProc() {
 
         if constexpr (SHOW_FPS) std::cout << "FPS: " << 1 / deltaTime << '\n';
 
+        EnterCriticalSection(&bufferLock);
         windowStuff.windowBuffer.clearToBlack();
-
-        /* Copy the current status of wireframes to avoid issues when deleting objects */
+        LeaveCriticalSection(&bufferLock);
 
         // Iterate over all WireFrames, draw to screen, rotate, and record updates
         for (WireFrame& wireFrame : windowStuff.wireFrames) {
@@ -153,8 +153,7 @@ void renderThreadProc() {
         // Lock the thread;
         EnterCriticalSection(&bufferLock);
 
-        HDC hdc = GetDC(windowStuff.hwnd);
-        if (hdc) {
+        if (HDC hdc = GetDC(windowStuff.hwnd)) {
             SetStretchBltMode(hdc, COLORONCOLOR);
 
             StretchDIBits(hdc,
@@ -340,7 +339,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for (auto& wireFrame : windowStuff.wireFrames) {
                 vec3 coords = windowStuff.windowBuffer.raycast.project(
                     {xPos, yPos}, wireFrame.getLocation().z);
-                std::cout << '{' << coords.x << ", " << coords.y << ", " << coords.z << "}\n";
+                // std::cout << '{' << coords.x << ", " << coords.y << ", " << coords.z << "}\n";
                 // if (wireFrame.intersects(coords)) {
                 //     std::cout << "Hit!\n";
                 // }
