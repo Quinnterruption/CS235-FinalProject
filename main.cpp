@@ -335,6 +335,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int yPos = GET_Y_LPARAM(lParam);
             std::cout << "{" << xPos << ", " << yPos << "}" << '\n';
 
+            if (windowStuff.wireFrames.empty()) break;
+
+            for (auto& wireFrame : windowStuff.wireFrames) {
+                vec3 coords = windowStuff.windowBuffer.raycast.project(
+                    {xPos, yPos}, wireFrame.getLocation().z);
+                std::cout << '{' << coords.x << ", " << coords.y << ", " << coords.z << "}\n";
+                // if (wireFrame.intersects(coords)) {
+                //     std::cout << "Hit!\n";
+                // }
+            }
 
             break;
         }
