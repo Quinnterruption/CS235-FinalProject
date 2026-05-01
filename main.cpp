@@ -122,6 +122,8 @@ void renderThreadProc() {
 
         windowStuff.windowBuffer.clearToBlack();
 
+        /* Copy the current status of wireframes to avoid issues when deleting objects */
+
         // Iterate over all WireFrames, draw to screen, rotate, and record updates
         for (WireFrame& wireFrame : windowStuff.wireFrames) {
             if (wireFrame.isExpired) continue;
