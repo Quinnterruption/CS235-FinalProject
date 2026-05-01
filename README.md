@@ -6,15 +6,17 @@ Open a `.rndr` file with the program to play back the saved recording
 | Input                       | Description                                 |
 |-----------------------------|---------------------------------------------|
 | `esc`                       | Closes the program                          |
-| `r`                         | Resets the cube's location and rotation     |
 | `x`/`y`/`z`                 | Toggles rotation about the `x`/`y`/`z`-axis |
 | `←`/`→`/`↑`/`↓`             | Moves object `left`/`right`/`up`/`down`     |
 | Scroll `Forward`/`Backward` | Moves object `forwards`/`backwards`         |
+| `left click`                | Select object                               |
+| Shift + `left click`        | Select multiple objects                     |
 
-## Plans for CS235
-- Mouse Movement and Selection of Objects
-- More Objects (Pyramid, Sphere)
-- More Complicated Rendering (Object Fill)
+Additionally, press G while multi-selecting to group them and select a parent for the selected objects
+
+## Possible Future Plans
+- Object filling
+- Better bounding boxes
 
 ## Sources
 [Win32API](https://learn.microsoft.com/en-us/windows/win32/)\
