@@ -76,7 +76,8 @@ void WireFrame::setWireFrame(const std::string& fileName) {
                 vertex[i] = stof(line.substr(0, space));
                 line = line.substr(space + 1);
             }
-            vertices.emplace_back(vertex);
+            updateMinMax(vertex);
+            vertices.push_back(vertex);
         } else if (isFace) {
             Triangle face{};
             for (int i = 0; i < 3; i++) {
@@ -84,7 +85,7 @@ void WireFrame::setWireFrame(const std::string& fileName) {
                 face[i] = stoi(line.substr(0, space)) - 1;
                 line = line.substr(space + 1);
             }
-            faces.emplace_back(face);
+            faces.push_back(face);
         }
     }
 
@@ -119,6 +120,8 @@ void WireFrame::setMidpoint() {
 
 void WireFrame::updateLocation(const vec3& change) {
     midpoint += change;
+    min += change;
+    max += change;
 }
 
 const std::vector<vec3>& WireFrame::getVertices() const { return vertices; }

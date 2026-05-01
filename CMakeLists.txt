@@ -17,6 +17,9 @@ if (OPENMP_FOUND)
             extra/includes/triangle.h
             extra/includes/quaternion.h
             extra/includes/vec3.h
+            extra/includes/raycast.h
+            extra/AABB.cpp
+            extra/AABB.h
     )
     target_link_libraries(FinalProject PUBLIC OpenMP::OpenMP_CXX)
 endif()
