@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
+#include <iostream>
 
 // constexpr float DEGREES = 1.0f;
 constexpr float RADIANS = 1.0f * M_PI / 180.0f;
@@ -42,6 +43,17 @@ void WireFrame::rotate(float deltaTime, const float TPS) {
         rotation *= quatZ;
     }
     rotation.normalize();
+
+    for (auto& child : children) {
+        child->setRotation(rotation);
+    }
+}
+
+void WireFrame::setRotation(const Quaternion& q) {
+    rotation = q;
+    for (auto& child : children) {
+        child->setRotation(q);
+    }
 }
 
 void WireFrame::setWireFrame(const std::string& fileName) {
@@ -119,11 +131,28 @@ void WireFrame::setMidpoint() {
 
 
 void WireFrame::updateLocation(const vec3& change) {
+    if (change == vec3{0, 0, 0}) return;
+
     midpoint += change;
     min += change;
     max += change;
+
+    for (const auto& child : children) {
+        child->updateLocation(change);
+    }
 }
+
+
+void WireFrame::addChild(const std::shared_ptr<WireFrame>& child) {
+    children.push_back(child);
+    children.back()->parent = std::make_shared<WireFrame>(*this);
+}
+
 
 const std::vector<vec3>& WireFrame::getVertices() const { return vertices; }
 
 const std::vector<Triangle>& WireFrame::getFaces() const { return faces; }
+
+const std::vector<std::shared_ptr<WireFrame>>& WireFrame::getChildren() const { return children; }
+
+const std::weak_ptr<WireFrame>& WireFrame::getParent() const { return parent; }

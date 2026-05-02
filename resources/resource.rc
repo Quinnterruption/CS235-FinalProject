@@ -10,6 +10,7 @@ BEGIN
             MENUITEM "&Sphere", ID_FILE_NEW_SPHERE
             MENUITEM "&Cylinder", ID_FILE_NEW_CYLINDER
             MENUITEM "&Pyramid", ID_FILE_NEW_PYRAMID
+            MENUITEM "&Test", ID_FILE_NEW_TEST
         END
         POPUP "&Record"
         BEGIN

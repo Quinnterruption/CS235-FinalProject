@@ -136,6 +136,7 @@ void renderThreadProc() {
             // Draw
             EnterCriticalSection(&bufferLock);
             windowStuff.windowBuffer.drawWireframe(wireFrame);
+            // windowStuff.windowBuffer.drawWireframe(*wireFrame.getChildren()[0]);
             LeaveCriticalSection(&bufferLock);
             // if (windowStuff.playback.recording()) {
             //     windowStuff.playback.update(wireFrame);
@@ -266,6 +267,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case ID_FILE_NEW_PYRAMID: {
                     EnterCriticalSection(&vectorLock);
                     windowStuff.wireFrames.emplace_back(pyramidFile);
+                    LeaveCriticalSection(&vectorLock);
+
+                    selected = &windowStuff.wireFrames.back();
+                    break;
+                }
+                case ID_FILE_NEW_TEST: {
+                    EnterCriticalSection(&vectorLock);
+                    windowStuff.wireFrames.emplace_back(cubeFile);
+                    windowStuff.wireFrames[0].updateLocation({-20, 0, 0});
+                    // windowStuff.wireFrames.emplace_back(cubeFile);
+                    windowStuff.wireFrames[0].addChild(std::make_shared<WireFrame>(WireFrame{cubeFile}));
+                    windowStuff.wireFrames[0].updateLocation({-20, 0, 0});
+                    windowStuff.wireFrames[0].getChildren()[0]->addChild(std::make_shared<WireFrame>(WireFrame{cubeFile}));
+                    // windowStuff.wireFrames.erase(windowStuff.wireFrames.begin() + 1);
+                    windowStuff.wireFrames[0].updateLocation({0, 0, 50});
                     LeaveCriticalSection(&vectorLock);
 
                     selected = &windowStuff.wireFrames.back();

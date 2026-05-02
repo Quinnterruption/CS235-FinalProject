@@ -66,13 +66,6 @@ struct WindowBuffer {
     }
 
     /**
-     * Calculates the coordinates of a 3D point projected on a 2D plane
-     * @param toMap the 3D coordinate to project
-     * @return a 2D point with offset coordinates
-     */
-    [[nodiscard]] std::pair<int, int> projectionMap(const vec3& toMap) const;
-
-    /**
      * Draws a line between two points
      * @param x1 coordinate
      * @param y1 coordinate
@@ -83,7 +76,7 @@ struct WindowBuffer {
 
     void drawTriangle(const vec3& a, const vec3& b, const vec3& c);
 
-    void drawWireframe(const WireFrame& wireframe);
+    void drawWireframe(const WireFrame& wireframe, const vec3& rotateLocation = {0, 0, 0});
 
     static float getLuma(unsigned int color);
 

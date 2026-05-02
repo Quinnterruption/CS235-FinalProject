@@ -6,6 +6,7 @@
 #define FINALPROJECT_WIREFRAME_H
 
 #include <fstream>
+#include <memory>
 #include <vector>
 #include "includes/vec3.h"
 #include "includes/quaternion.h"
@@ -24,12 +25,16 @@ enum rotationFlags {
     rotateZ = 4
 };
 
-class WireFrame : public AABB {
+class WireFrame : public AABB, public std::enable_shared_from_this<WireFrame> {
     std::vector<vec3> vertices;
     std::vector<Triangle> faces;
     vec3 midpoint{};
     Quaternion rotation{};
     int rotateFlags = 0;
+
+    // Linked List Handling
+    std::weak_ptr<WireFrame> parent;
+    std::vector<std::shared_ptr<WireFrame>> children;
 
     void setMidpoint();
 
@@ -61,9 +66,17 @@ public:
 
     void rotate(float deltaTime, float TPS);
 
+    void setRotation(const Quaternion& q);
+
     [[nodiscard]] const std::vector<vec3>& getVertices() const;
 
     [[nodiscard]] const std::vector<Triangle>& getFaces() const;
+
+    const std::vector<std::shared_ptr<WireFrame>>& getChildren() const;
+
+    const std::weak_ptr<WireFrame>& getParent() const;
+
+    void addChild(const std::shared_ptr<WireFrame>& child);
 };
 
 
