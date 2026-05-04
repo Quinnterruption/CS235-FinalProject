@@ -36,17 +36,27 @@ constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
 constexpr float moveAccel = 1.2f;   // Should be refactored to WireFrame
 constexpr float maxSpeed = 4.0f;    // Should be refactored to WireFrame
-float moveDistances[4];             // Should be refactored to WireFrame
+float moveDistances[6];             // Should be refactored to WireFrame
 
 std::string cubeFile = R"(..\extra\base-objs\cube.obj)";
 std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
 std::string sphereFile = R"(..\extra\base-objs\sphere.obj)";
 std::string testFile = R"(..\extra\base-objs\test.obj)";
 std::string pyramidFile = R"(..\extra\base-objs\pyramid.obj)";
-WireFrame* selected = nullptr;
 std::vector<WireFrame*> multiSelect;
+auto lastScroll = std::chrono::steady_clock::now();
+
+bool isSelected(const WireFrame& wireFrame) {
+    return std::ranges::find(multiSelect, &wireFrame) != multiSelect.end();
+}
+
 
 void pressKeys() {
+    using namespace std::chrono_literals;
+    if (std::chrono::steady_clock::now() - lastScroll > 50ms) {
+        moveDistances[4] = 1.0f;
+        moveDistances[5] = 1.0f;
+    }
     if (windowStuff.keyPressed[VK_ESCAPE]) {
         if (MessageBox(windowStuff.hwnd, "Quit the program?", "WARNING!", MB_YESNO) == IDYES) {
             running = false;
@@ -60,47 +70,43 @@ void pressKeys() {
         else ANTI_ALIAS = true;
     }
 
-    if (!multiSelect.empty()) {
+    if (multiSelect.empty()) return;
+    for (auto& wireFrame : multiSelect) {
+        if (windowStuff.keyPressed[VK_DELETE]) {
+            EnterCriticalSection(&vectorLock);
+            wireFrame->isExpired = true;     // Expire current wireFrame
+            LeaveCriticalSection(&vectorLock);
 
-    }
-
-    // WireFrame Handling
-    if (selected == nullptr) return;
-    // Delete WireFrame
-    if (windowStuff.keyPressed[VK_DELETE]) {
-        EnterCriticalSection(&vectorLock);
-        selected->isExpired = true;     // Expire current wireFrame
-        LeaveCriticalSection(&vectorLock);
-
-        selected = nullptr;
-        return;
-    }
-    // Cube movement Left/Up/Right/Down
-    // VK_LEFT is the first of the arrow key macros in Win32
-    // This was designed this way to reduce the repetitive code
-    for (int i = 0; i < 4; i++) {
-        if (!windowStuff.keyPressedPrev[i + VK_LEFT]) moveDistances[i] = 1.0;
-        if (windowStuff.keyPressed[i + VK_LEFT]) {
-            windowStuff.keyPressedPrev[i + VK_LEFT] = true;
-            if (moveDistances[i] < 1 + maxSpeed) {
-                moveDistances[i] *= moveAccel;
+            // selected = nullptr;
+            continue;
+        }
+        // Cube movement Left/Up/Right/Down
+        // VK_LEFT is the first of the arrow key macros in Win32
+        // This was designed this way to reduce the repetitive code
+        for (int i = 0; i < 4; i++) {
+            if (!windowStuff.keyPressedPrev[i + VK_LEFT]) moveDistances[i] = 1.0;
+            if (windowStuff.keyPressed[i + VK_LEFT]) {
+                windowStuff.keyPressedPrev[i + VK_LEFT] = true;
+                if (moveDistances[i] < 1 + maxSpeed) {
+                    moveDistances[i] *= moveAccel;
+                }
             }
         }
+        // Cube rotation toggles
+        // This conditional ensures that the key isn't triggered more than once
+        if (windowStuff.keyPressed['X'] && !windowStuff.keyPressedPrev['X']) {  // x
+            wireFrame->toggleRotation(rotateX);
+        }
+        if (windowStuff.keyPressed['Y'] && !windowStuff.keyPressedPrev['Y']) {  // y
+            wireFrame->toggleRotation(rotateY);
+        }
+        if (windowStuff.keyPressed['Z'] && !windowStuff.keyPressedPrev['Z']) {  // z
+            wireFrame->toggleRotation(rotateZ);
+        }
     }
-    // Cube rotation toggles
-    // This conditional ensures that the key isn't triggered more than once
-    if (windowStuff.keyPressed['X'] && !windowStuff.keyPressedPrev['X']) {  // x
-        windowStuff.keyPressedPrev['X'] = true;
-        selected->toggleRotation(rotateX);
-    }
-    if (windowStuff.keyPressed['Y'] && !windowStuff.keyPressedPrev['Y']) {  // y
-        windowStuff.keyPressedPrev['Y'] = true;
-        selected->toggleRotation(rotateY);
-    }
-    if (windowStuff.keyPressed['Z'] && !windowStuff.keyPressedPrev['Z']) {  // z
-        windowStuff.keyPressedPrev['Z'] = true;
-        selected->toggleRotation(rotateZ);
-    }
+    if (windowStuff.keyPressed['X']) windowStuff.keyPressedPrev['X'] = true;
+    if (windowStuff.keyPressed['Y']) windowStuff.keyPressedPrev['Y'] = true;
+    if (windowStuff.keyPressed['Z']) windowStuff.keyPressedPrev['Z'] = true;
 }
 
 void renderThreadProc() {
@@ -113,8 +119,14 @@ void renderThreadProc() {
     QueryPerformanceCounter(&lastTime);
 
     float accumulator = 0;
+    bool reset = false;
 
     while (running) {
+        if (reset) {
+            reset = false;
+            accumulator = 0;
+        }
+
         QueryPerformanceCounter(&currentTime);
         float deltaTime = static_cast<float>(currentTime.QuadPart - lastTime.QuadPart) / freq.QuadPart;
         lastTime = currentTime;
@@ -132,19 +144,19 @@ void renderThreadProc() {
             if (wireFrame.isExpired) continue;
 
             wireFrame.rotate(deltaTime, TPS);
-            if (&wireFrame == selected && accumulator >= 1 / TPS) {
-                accumulator = 0.0f;
-                wireFrame.updateLocation({moveDistances[2] - moveDistances[0], moveDistances[1] - moveDistances[3], 0});
+            if (isSelected(wireFrame)) {
+                if (accumulator >= 1 / TPS) {
+                    reset = true;
+                    wireFrame.updateLocation({moveDistances[2] - moveDistances[0], moveDistances[1] - moveDistances[3], moveDistances[5] - moveDistances[4]});
+                }
+                // Change to blue
+                windowStuff.windowBuffer.setColor(0, 0, 255);
             }
             // Draw
             EnterCriticalSection(&bufferLock);
-            // Change to blue
-            if (&wireFrame == selected) windowStuff.windowBuffer.setColor(0, 0, 255);
-
             windowStuff.windowBuffer.drawWireframe(wireFrame);
             // Reset to green
             windowStuff.windowBuffer.setColor(0, 255, 0);
-            // windowStuff.windowBuffer.drawWireframe(*wireFrame.getChildren()[0]);
             LeaveCriticalSection(&bufferLock);
             // if (windowStuff.playback.recording()) {
             //     windowStuff.playback.update(wireFrame);
@@ -251,33 +263,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     // DialogBox(nullptr, MAKEINTRESOURCE(IDD_MYDIALOG), hwnd, (DLGPROC)DeleteItemProc);
                     EnterCriticalSection(&vectorLock);
                     windowStuff.wireFrames.emplace_back(cubeFile);
+                    windowStuff.wireFrames.back().updateLocation({0, 0, 50});
                     LeaveCriticalSection(&vectorLock);
 
-                    selected = &windowStuff.wireFrames.back();
                     break;
                 }
                 case ID_FILE_NEW_SPHERE: {
                     EnterCriticalSection(&vectorLock);
                     windowStuff.wireFrames.emplace_back(sphereFile);
+                    windowStuff.wireFrames.back().updateLocation({0, 0, 50});
                     LeaveCriticalSection(&vectorLock);
 
-                    selected = &windowStuff.wireFrames.back();
                     break;
                 }
                 case ID_FILE_NEW_CYLINDER: {
                     EnterCriticalSection(&vectorLock);
                     windowStuff.wireFrames.emplace_back(cylFile);
+                    windowStuff.wireFrames.back().updateLocation({0, 0, 50});
                     LeaveCriticalSection(&vectorLock);
 
-                    selected = &windowStuff.wireFrames.back();
                     break;
                 }
                 case ID_FILE_NEW_PYRAMID: {
                     EnterCriticalSection(&vectorLock);
                     windowStuff.wireFrames.emplace_back(pyramidFile);
+                    windowStuff.wireFrames.back().updateLocation({0, 0, 50});
                     LeaveCriticalSection(&vectorLock);
 
-                    selected = &windowStuff.wireFrames.back();
                     break;
                 }
                 case ID_FILE_NEW_TEST: {
@@ -295,7 +307,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     windowStuff.wireFrames.back().isExpired = true;
                     LeaveCriticalSection(&vectorLock);
 
-                    selected = &parent;
                     break;
                 }
                 case ID_FILE_RECORD_TEN: {
@@ -339,22 +350,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_MOUSEWHEEL: {
             short delta = GET_WHEEL_DELTA_WPARAM(wParam);
             if (delta > 0) {
-                if (selected == nullptr) {
-                    for (auto& wireFrame : windowStuff.wireFrames) {
-                        wireFrame.updateLocation({0, 0, -20});
-                    }
-                } else {
-                    selected->updateLocation({0, 0, -20});
-                }
+                moveDistances[4] = 16.0f;
             } else if (delta < 0) {
-                if (selected == nullptr) {
-                    for (auto& wireFrame : windowStuff.wireFrames) {
-                        wireFrame.updateLocation({0, 0, 20});
-                    }
-                } else {
-                    selected->updateLocation({0, 0, 20});
-                }
+                moveDistances[5] = 16.0f;
             }
+            lastScroll = std::chrono::steady_clock::now();
             break;
         }
         // Left click handling
@@ -368,16 +368,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             bool noHits = true;
             for (auto& wireFrame : windowStuff.wireFrames) {
                 if (wireFrame.intersects({xPos, yPos}, windowStuff.windowBuffer.raycast)) {
-                    if (windowStuff.keyPressed[VK_SHIFT]) {
+                    if (multiSelect.size() == 0 || windowStuff.keyPressed[VK_SHIFT]) {
                         multiSelect.emplace_back(&wireFrame);
                     } else {
-                        selected = &wireFrame;
-                        multiSelect.clear();
+                        multiSelect[0] = &wireFrame;
                     }
                     noHits = false;
                 }
             }
-            if (noHits) selected = nullptr;
+            if (noHits) {
+                multiSelect.clear();
+            }
 
             break;
         }
