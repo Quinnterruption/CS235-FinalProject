@@ -138,7 +138,12 @@ void renderThreadProc() {
             }
             // Draw
             EnterCriticalSection(&bufferLock);
+            // Change to blue
+            if (&wireFrame == selected) windowStuff.windowBuffer.setColor(0, 0, 255);
+
             windowStuff.windowBuffer.drawWireframe(wireFrame);
+            // Reset to green
+            windowStuff.windowBuffer.setColor(0, 255, 0);
             // windowStuff.windowBuffer.drawWireframe(*wireFrame.getChildren()[0]);
             LeaveCriticalSection(&bufferLock);
             // if (windowStuff.playback.recording()) {
@@ -277,7 +282,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 case ID_FILE_NEW_TEST: {
                     EnterCriticalSection(&vectorLock);
-                    windowStuff.wireFrames.reserve(2);  // Reserve space
+                    windowStuff.wireFrames.reserve(windowStuff.wireFrames.size() + 2);  // Reserve space
 
                     windowStuff.wireFrames.emplace_back(cubeFile);
                     auto& parent = windowStuff.wireFrames.back();
@@ -427,6 +432,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             );
 
     windowStuff.hwnd = hwnd;
+    windowStuff.windowBuffer.setColor(0, 255, 0);
 
     if (hwnd == nullptr) {
         MessageBox(nullptr, "Window Creation Failed!", "ERROR", MB_ICONEXCLAMATION | MB_OK);

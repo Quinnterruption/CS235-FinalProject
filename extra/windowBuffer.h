@@ -12,6 +12,7 @@
  * A struct to maintain a WindowBuffer and render certain objects
  */
 struct WindowBuffer {
+    uint8_t r = 0, g = 0, b = 0;
     unsigned char* memory = nullptr;
     unsigned int* fxaaBuffer = nullptr;
     float* lumaBuffer = nullptr;
@@ -41,6 +42,12 @@ struct WindowBuffer {
         memory[4 * (x + y * w) + 1] = g;
         memory[4 * (x + y * w) + 2] = r;
         memory[4 * (x + y * w) + 3] = 0;
+    }
+
+    void setColor(uint8_t red, uint8_t green, uint8_t blue) {
+        r = red;
+        g = green;
+        b = blue;
     }
 
     /**

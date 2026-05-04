@@ -125,7 +125,7 @@ void WindowBuffer::drawLine(int x1, int y1, int x2, int y2) {
 
     // Might be able to get rid of newX and newY if you update x1 and y1 directly
     for (int i = 0; i < screenDiagInPixels; i++) {
-        drawAtSafe(x1 + newX, y1 + newY, 0, 255, 0);
+        drawAtSafe(x1 + newX, y1 + newY, r, g, b);
 
         if (x1 + newX == x2 && y1 + newY == y2) break;
         // if (x1 + newX != x1 && (x1 + newX == 0 || x1 + newX == w)) {
