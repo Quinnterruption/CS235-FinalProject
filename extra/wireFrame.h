@@ -12,6 +12,7 @@
 #include "includes/quaternion.h"
 #include "includes/triangle.h"
 #include "AABB.h"
+#include "includes/raycast.h"
 
 
 using rndr::vec3, rndr::Triangle, rndr::Quaternion;
@@ -25,7 +26,7 @@ enum rotationFlags {
     rotateZ = 4
 };
 
-class WireFrame : public AABB, public std::enable_shared_from_this<WireFrame> {
+class WireFrame : public AABB {
     std::vector<vec3> vertices;
     std::vector<Triangle> faces;
     vec3 midpoint{};
@@ -33,7 +34,7 @@ class WireFrame : public AABB, public std::enable_shared_from_this<WireFrame> {
     int rotateFlags = 0;
 
     // Linked List Handling
-    std::weak_ptr<WireFrame> parent;
+    // std::weak_ptr<WireFrame> parent;
     std::vector<std::shared_ptr<WireFrame>> children;
 
     void setMidpoint();
@@ -44,6 +45,10 @@ public:
     WireFrame();
 
     WireFrame(const std::string& fileName);
+
+    WireFrame(const WireFrame& obj);
+
+    WireFrame& operator=(const WireFrame& obj);
 
     /**
      * Reads an obj file and creates a WireFrame from the data
@@ -74,9 +79,11 @@ public:
 
     const std::vector<std::shared_ptr<WireFrame>>& getChildren() const;
 
-    const std::weak_ptr<WireFrame>& getParent() const;
+    // const std::weak_ptr<WireFrame>& getParent() const;
 
-    void addChild(const std::shared_ptr<WireFrame>& child);
+    bool intersects(const std::pair<float, float>& screenCoords, const rndr::Raycast& ray) const;
+
+    void addChild(const WireFrame& child);
 };
 
 

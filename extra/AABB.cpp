@@ -6,6 +6,19 @@
 #include <iostream>
 
 
+AABB::AABB(const AABB& obj) {
+    min = obj.getMin();
+    max = obj.getMax();
+}
+
+AABB& AABB::operator=(const AABB& obj) {
+    if (this != &obj) {
+        min = obj.getMin();
+        max = obj.getMax();
+    }
+    return *this;
+}
+
 bool AABB::intersects(const rndr::vec3& coords) const {
     return  (min.x <= coords.x && max.x >= coords.x) &&
             (min.y <= coords.y && max.y >= coords.y) &&

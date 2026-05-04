@@ -9,6 +9,8 @@
 #include <filesystem>
 #include <iostream>
 
+#include "playback.h"
+
 // constexpr float DEGREES = 1.0f;
 constexpr float RADIANS = 1.0f * M_PI / 180.0f;
 
@@ -143,9 +145,48 @@ void WireFrame::updateLocation(const vec3& change) {
 }
 
 
-void WireFrame::addChild(const std::shared_ptr<WireFrame>& child) {
-    children.push_back(child);
-    children.back()->parent = std::make_shared<WireFrame>(*this);
+void WireFrame::addChild(const WireFrame& child) {
+    children.emplace_back(std::make_shared<WireFrame>(child));
+    // children.back()->parent = std::make_shared<WireFrame>(*this);
+}
+
+
+WireFrame& WireFrame::operator=(const WireFrame& obj) {
+    if (this != &obj) {
+        AABB::operator=(obj);
+
+        vertices = obj.vertices;
+        faces = obj.faces;
+        midpoint = obj.midpoint;
+        rotation = obj.rotation;
+        rotateFlags = obj.rotateFlags;
+
+        // parent = obj.parent;
+        children.reserve(obj.children.size());
+        std::ranges::transform(obj.children, std::back_inserter(children), []
+            (const std::shared_ptr<WireFrame>& child) {
+            return std::make_shared<WireFrame>(*child);
+        });
+    }
+    return *this;
+}
+
+
+WireFrame::WireFrame(const WireFrame& obj) : AABB(obj) {
+    if (this != &obj) {
+        vertices = obj.vertices;
+        faces = obj.faces;
+        midpoint = obj.midpoint;
+        rotation = obj.rotation;
+        rotateFlags = obj.rotateFlags;
+
+        // parent = obj.parent;
+        children.reserve(obj.children.size());
+        std::ranges::transform(obj.children, std::back_inserter(children), []
+            (const std::shared_ptr<WireFrame>& child) {
+            return std::make_shared<WireFrame>(*child);
+        });
+    }
 }
 
 
@@ -155,4 +196,17 @@ const std::vector<Triangle>& WireFrame::getFaces() const { return faces; }
 
 const std::vector<std::shared_ptr<WireFrame>>& WireFrame::getChildren() const { return children; }
 
-const std::weak_ptr<WireFrame>& WireFrame::getParent() const { return parent; }
+// const std::weak_ptr<WireFrame>& WireFrame::getParent() const { return parent; }
+
+bool WireFrame::intersects(const std::pair<float, float>& screenCoords, const rndr::Raycast& ray) const {
+    vec3 coords = ray.project(screenCoords, min.z);
+
+    if (AABB::intersects(coords)) return true;
+
+    // for (auto& child : children) {
+    //     if (child->intersects(screenCoords, ray)) return true;
+    // }
+    return std::ranges::any_of(children, [screenCoords, ray](const std::shared_ptr<WireFrame>& child) {
+        return child->intersects(screenCoords, ray);
+    });
+}

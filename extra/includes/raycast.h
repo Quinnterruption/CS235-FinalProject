@@ -26,7 +26,7 @@ namespace rndr {
         }
 
         vec3 project(const std::pair<float, float>& toMap, double zCoord) const {
-            vec3 coords;
+            vec3 coords{};
 
             double distToObj = zCoord <= 0 ? 0.01 : zCoord;
             coords.x = (toMap.first - midScreenX) * distToObj / distToScreen;

@@ -60,6 +60,9 @@ void pressKeys() {
         else ANTI_ALIAS = true;
     }
 
+    if (!multiSelect.empty()) {
+
+    }
 
     // WireFrame Handling
     if (selected == nullptr) return;
@@ -195,7 +198,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_ERASEBKGND: {
             // Stop windows from doing something
-            return 1;
+            return TRUE;
         }
         // Redraw window handling
         case WM_PAINT: {
@@ -274,17 +277,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 case ID_FILE_NEW_TEST: {
                     EnterCriticalSection(&vectorLock);
+                    windowStuff.wireFrames.reserve(2);  // Reserve space
+
                     windowStuff.wireFrames.emplace_back(cubeFile);
-                    windowStuff.wireFrames[0].updateLocation({-20, 0, 0});
-                    // windowStuff.wireFrames.emplace_back(cubeFile);
-                    windowStuff.wireFrames[0].addChild(std::make_shared<WireFrame>(WireFrame{cubeFile}));
-                    windowStuff.wireFrames[0].updateLocation({-20, 0, 0});
-                    windowStuff.wireFrames[0].getChildren()[0]->addChild(std::make_shared<WireFrame>(WireFrame{cubeFile}));
-                    // windowStuff.wireFrames.erase(windowStuff.wireFrames.begin() + 1);
-                    windowStuff.wireFrames[0].updateLocation({0, 0, 50});
+                    auto& parent = windowStuff.wireFrames.back();
+
+                    parent.updateLocation({-20, 0, 0});
+                    windowStuff.wireFrames.emplace_back(cubeFile);
+                    parent.addChild(windowStuff.wireFrames.back());
+
+                    parent.updateLocation({0, 0, 50});
+                    windowStuff.wireFrames.back().isExpired = true;
                     LeaveCriticalSection(&vectorLock);
 
-                    selected = &windowStuff.wireFrames.back();
+                    selected = &parent;
                     break;
                 }
                 case ID_FILE_RECORD_TEN: {
@@ -350,19 +356,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_LBUTTONDOWN: {
             int xPos = GET_X_LPARAM(lParam);
             int yPos = GET_Y_LPARAM(lParam);
-            std::cout << "{" << xPos << ", " << yPos << "}" << '\n';
+            // std::cout << "{" << xPos << ", " << yPos << "}" << '\n';
 
             if (windowStuff.wireFrames.empty()) break;
 
             bool noHits = true;
             for (auto& wireFrame : windowStuff.wireFrames) {
-                vec3 coords = windowStuff.windowBuffer.raycast.project(
-                    {xPos, yPos}, wireFrame.min.z);
-                // std::cout << '{' << coords.x << ", " << coords.y << ", " << coords.z << "}\n";
-                if (wireFrame.intersects(coords)) {
-                    selected = &wireFrame;
+                if (wireFrame.intersects({xPos, yPos}, windowStuff.windowBuffer.raycast)) {
+                    if (windowStuff.keyPressed[VK_SHIFT]) {
+                        multiSelect.emplace_back(&wireFrame);
+                    } else {
+                        selected = &wireFrame;
+                        multiSelect.clear();
+                    }
                     noHits = false;
-                    // std::cout << "Hit!\n";
                 }
             }
             if (noHits) selected = nullptr;
