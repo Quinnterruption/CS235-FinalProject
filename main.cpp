@@ -57,6 +57,7 @@ void pressKeys() {
         moveDistances[4] = 1.0f;
         moveDistances[5] = 1.0f;
     }
+
     if (windowStuff.keyPressed[VK_ESCAPE]) {
         if (MessageBox(windowStuff.hwnd, "Quit the program?", "WARNING!", MB_YESNO) == IDYES) {
             running = false;
@@ -64,13 +65,37 @@ void pressKeys() {
         windowStuff.keyPressed[VK_ESCAPE] = false;
     }
 
+    /* Anti Alias Toggle */
     if (windowStuff.keyPressed['A'] && !windowStuff.keyPressedPrev['A']) {
         windowStuff.keyPressedPrev['A'] = true;
         if (ANTI_ALIAS) ANTI_ALIAS = false;
         else ANTI_ALIAS = true;
     }
 
+    // /* Clear WireFrames */
+    // if (windowStuff.keyPressed['C'] && !windowStuff.keyPressedPrev['C']) {
+    //     windowStuff.keyPressedPrev['C'] = true;
+    //
+    // }
+
+    /* Group WireFrames */
+    if (multiSelect.size() > 1 && windowStuff.keyPressed['G'] && !windowStuff.keyPressedPrev['G']) {
+        windowStuff.keyPressedPrev['G'] = true;
+        EnterCriticalSection(&vectorLock);
+
+        auto parent = multiSelect[0];
+        multiSelect.erase(multiSelect.begin(), multiSelect.begin() + 1);
+
+        for (auto child : multiSelect) {
+            parent->addChild(*child);
+            child->isExpired = true;
+        }
+        multiSelect.clear();
+        LeaveCriticalSection(&vectorLock);
+    }
+
     if (multiSelect.empty()) return;
+
     for (auto& wireFrame : multiSelect) {
         if (windowStuff.keyPressed[VK_DELETE]) {
             EnterCriticalSection(&vectorLock);
