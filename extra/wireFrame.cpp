@@ -34,20 +34,25 @@ void WireFrame::rotate(float deltaTime, const float TPS) {
     const Quaternion quatX = Quaternion::fromAxisAngle(1.0f, 0.0f, 0.0f, theta);
     const Quaternion quatY = Quaternion::fromAxisAngle(0.0f, 1.0f, 0.0f, theta);
     const Quaternion quatZ = Quaternion::fromAxisAngle(0.0f, 0.0f, 1.0f, theta);
+    Quaternion change;
 
     if ((rotateFlags & rotateX) == rotateX) {   // Rotate around X
-        rotation *= quatX;
+        change *= quatX;
     }
     if ((rotateFlags & rotateY) == rotateY) {   // Rotate around Y
-        rotation *= quatY;
+        change *= quatY;
     }
     if ((rotateFlags & rotateZ) == rotateZ) {   // Rotate around Z
-        rotation *= quatZ;
+        change *= quatZ;
     }
-    rotation.normalize();
+    rotate(change);
+}
 
+void WireFrame::rotate(const Quaternion& q) {
+    rotation *= q;
+    rotation.normalize();
     for (auto& child : children) {
-        child->setRotation(rotation);
+        child->rotate(q);
     }
 }
 
@@ -146,8 +151,7 @@ void WireFrame::updateLocation(const vec3& change) {
 
 
 void WireFrame::addChild(const WireFrame& child) {
-    children.emplace_back(std::make_shared<WireFrame>(child));
-    // children.back()->parent = std::make_shared<WireFrame>(*this);
+    children.emplace_back(std::make_unique<WireFrame>(child));
 }
 
 
@@ -160,16 +164,40 @@ WireFrame& WireFrame::operator=(const WireFrame& obj) {
         midpoint = obj.midpoint;
         rotation = obj.rotation;
         rotateFlags = obj.rotateFlags;
+        expired = obj.expired;
 
         // parent = obj.parent;
         children.reserve(obj.children.size());
-        std::ranges::transform(obj.children, std::back_inserter(children), []
-            (const std::shared_ptr<WireFrame>& child) {
-            return std::make_shared<WireFrame>(*child);
-        });
+        for (auto& child : obj.children) {
+            addChild(*child);
+        }
+        // std::ranges::transform(obj.children, std::back_inserter(children), []
+        //     (const std::shared_ptr<WireFrame>& child) {
+        //     return std::make_shared<WireFrame>(*child);
+        // });
     }
     return *this;
 }
+
+
+WireFrame& WireFrame::operator=(WireFrame&& obj) noexcept {
+    if (this != &obj) {
+        AABB::operator=(obj);
+        vertices = std::move(obj.vertices);
+        faces = std::move(obj.faces);
+        midpoint = obj.midpoint;
+        rotation = obj.rotation;
+        rotateFlags = obj.rotateFlags;
+        expired = obj.expired;
+
+        children = std::move(obj.children);
+    }
+    return *this;
+}
+
+
+// Add move constructor?
+// WireFrame::WireFrame(WireFrame&& obj) noexcept : vertices(std::move(obj.vertices))
 
 
 WireFrame::WireFrame(const WireFrame& obj) : AABB(obj) {
@@ -179,13 +207,17 @@ WireFrame::WireFrame(const WireFrame& obj) : AABB(obj) {
         midpoint = obj.midpoint;
         rotation = obj.rotation;
         rotateFlags = obj.rotateFlags;
+        expired = obj.expired;
 
         // parent = obj.parent;
         children.reserve(obj.children.size());
-        std::ranges::transform(obj.children, std::back_inserter(children), []
-            (const std::shared_ptr<WireFrame>& child) {
-            return std::make_shared<WireFrame>(*child);
-        });
+        for (auto& child : obj.children) {
+            addChild(*child);
+        }
+        // std::ranges::transform(obj.children, std::back_inserter(children), []
+        //     (const std::shared_ptr<WireFrame>& child) {
+        //     return std::make_shared<WireFrame>(*child);
+        // });
     }
 }
 
@@ -194,7 +226,7 @@ const std::vector<vec3>& WireFrame::getVertices() const { return vertices; }
 
 const std::vector<Triangle>& WireFrame::getFaces() const { return faces; }
 
-const std::vector<std::shared_ptr<WireFrame>>& WireFrame::getChildren() const { return children; }
+const std::vector<std::unique_ptr<WireFrame>>& WireFrame::getChildren() const { return children; }
 
 // const std::weak_ptr<WireFrame>& WireFrame::getParent() const { return parent; }
 
@@ -206,7 +238,7 @@ bool WireFrame::intersects(const std::pair<float, float>& screenCoords, const rn
     // for (auto& child : children) {
     //     if (child->intersects(screenCoords, ray)) return true;
     // }
-    return std::ranges::any_of(children, [screenCoords, ray](const std::shared_ptr<WireFrame>& child) {
+    return std::ranges::any_of(children, [screenCoords, ray](const std::unique_ptr<WireFrame>& child) {
         return child->intersects(screenCoords, ray);
     });
 }

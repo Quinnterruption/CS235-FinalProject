@@ -12,12 +12,12 @@ BEGIN
             MENUITEM "&Pyramid", ID_FILE_NEW_PYRAMID
             MENUITEM "&Test", ID_FILE_NEW_TEST
         END
-        POPUP "&Record"
-        BEGIN
-            MENUITEM "&10 Seconds", ID_FILE_RECORD_TEN
-            MENUITEM "&15 Seconds", ID_FILE_RECORD_FIFTEEN
-            MENUITEM "&30 Seconds", ID_FILE_RECORD_THIRTY
-        END
+//        POPUP "&Record"
+//        BEGIN
+//            MENUITEM "&10 Seconds", ID_FILE_RECORD_TEN
+//            MENUITEM "&15 Seconds", ID_FILE_RECORD_FIFTEEN
+//           MENUITEM "&30 Seconds", ID_FILE_RECORD_THIRTY
+//        END
         MENUITEM "&Play", ID_FILE_PLAY
         MENUITEM "E&xit", ID_FILE_EXIT
     END

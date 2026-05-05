@@ -32,15 +32,15 @@ class WireFrame : public AABB {
     vec3 midpoint{};
     Quaternion rotation{};
     int rotateFlags = 0;
+    bool expired = false;
 
     // Linked List Handling
     // std::weak_ptr<WireFrame> parent;
-    std::vector<std::shared_ptr<WireFrame>> children;
+    std::vector<std::unique_ptr<WireFrame>> children;
 
     void setMidpoint();
 
 public:
-    bool isExpired = false;
 
     WireFrame();
 
@@ -49,6 +49,8 @@ public:
     WireFrame(const WireFrame& obj);
 
     WireFrame& operator=(const WireFrame& obj);
+
+    WireFrame& operator=(WireFrame&& obj) noexcept;
 
     /**
      * Reads an obj file and creates a WireFrame from the data
@@ -71,19 +73,25 @@ public:
 
     void rotate(float deltaTime, float TPS);
 
+    void rotate(const Quaternion& q);
+
     void setRotation(const Quaternion& q);
 
     [[nodiscard]] const std::vector<vec3>& getVertices() const;
 
     [[nodiscard]] const std::vector<Triangle>& getFaces() const;
 
-    const std::vector<std::shared_ptr<WireFrame>>& getChildren() const;
+    const std::vector<std::unique_ptr<WireFrame>>& getChildren() const;
 
     // const std::weak_ptr<WireFrame>& getParent() const;
 
     bool intersects(const std::pair<float, float>& screenCoords, const rndr::Raycast& ray) const;
 
     void addChild(const WireFrame& child);
+
+    bool isExpired() const { return expired; }
+
+    void expire() { expired = true; }
 };
 
 

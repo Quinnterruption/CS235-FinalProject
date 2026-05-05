@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <atomic>
 #include <windows.h>
 #include <windowsx.h>
@@ -75,7 +76,11 @@ void pressKeys() {
     // /* Clear WireFrames */
     // if (windowStuff.keyPressed['C'] && !windowStuff.keyPressedPrev['C']) {
     //     windowStuff.keyPressedPrev['C'] = true;
-    //
+    //     EnterCriticalSection(&vectorLock);
+    //     multiSelect.clear();
+    //     windowStuff.wireFrames.clear();
+    //     LeaveCriticalSection(&vectorLock);
+    //     return;
     // }
 
     /* Group WireFrames */
@@ -88,7 +93,7 @@ void pressKeys() {
 
         for (auto child : multiSelect) {
             parent->addChild(*child);
-            child->isExpired = true;
+            child->expire();
         }
         multiSelect.clear();
         LeaveCriticalSection(&vectorLock);
@@ -99,9 +104,10 @@ void pressKeys() {
     for (auto& wireFrame : multiSelect) {
         if (windowStuff.keyPressed[VK_DELETE]) {
             EnterCriticalSection(&vectorLock);
-            wireFrame->isExpired = true;     // Expire current wireFrame
+            wireFrame->expire();
             LeaveCriticalSection(&vectorLock);
 
+            multiSelect.clear();
             continue;
         }
         // Cube movement Left/Up/Right/Down
@@ -165,7 +171,7 @@ void renderThreadProc() {
 
         // Iterate over all WireFrames, draw to screen, rotate, and record updates
         for (WireFrame& wireFrame : windowStuff.wireFrames) {
-            if (wireFrame.isExpired) continue;
+            if (wireFrame.isExpired()) continue;
 
             wireFrame.rotate(deltaTime, TPS);
             if (isSelected(wireFrame)) {
@@ -190,7 +196,7 @@ void renderThreadProc() {
         /* Remove expired wireFrames */
         EnterCriticalSection(&vectorLock);
         std::erase_if(windowStuff.wireFrames, [](const WireFrame& wireFrame) {
-            return wireFrame.isExpired;
+            return wireFrame.isExpired();
         });
         LeaveCriticalSection(&vectorLock);
 
@@ -328,7 +334,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     parent.addChild(windowStuff.wireFrames.back());
 
                     parent.updateLocation({0, 0, 50});
-                    windowStuff.wireFrames.back().isExpired = true;
+                    windowStuff.wireFrames.back().expire();
                     LeaveCriticalSection(&vectorLock);
 
                     break;
