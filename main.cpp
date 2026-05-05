@@ -102,7 +102,6 @@ void pressKeys() {
             wireFrame->isExpired = true;     // Expire current wireFrame
             LeaveCriticalSection(&vectorLock);
 
-            // selected = nullptr;
             continue;
         }
         // Cube movement Left/Up/Right/Down
