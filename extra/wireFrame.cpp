@@ -45,14 +45,17 @@ void WireFrame::rotate(float deltaTime, const float TPS) {
     if ((rotateFlags & rotateZ) == rotateZ) {   // Rotate around Z
         change *= quatZ;
     }
-    rotate(change);
+    rotate(change, midpoint);
 }
 
-void WireFrame::rotate(const Quaternion& q) {
+void WireFrame::rotate(const Quaternion& q, const vec3& center) {
     rotation *= q;
     rotation.normalize();
+
+    vec3 rotationVec = vec3::rotate(initialMidpoint - center, rotation);
+    midpoint = center + rotationVec;
     for (auto& child : children) {
-        child->rotate(q);
+        child->rotate(q, midpoint);
     }
 }
 
@@ -95,7 +98,6 @@ void WireFrame::setWireFrame(const std::string& fileName) {
                 vertex[i] = stof(line.substr(0, space));
                 line = line.substr(space + 1);
             }
-            updateMinMax(vertex);
             vertices.push_back(vertex);
         } else if (isFace) {
             Triangle face{};
@@ -132,8 +134,10 @@ void WireFrame::setMidpoint() {
     /* Offset all points to have a midpoint of 0, 0, 0 */
     for (auto& vertex : vertices) {
         vertex -= midpoint;
+        calculateMinMax(vertex);
     }
     midpoint = {0, 0, 0};
+    initialMidpoint = {0, 0, 0};
 }
 
 
@@ -141,8 +145,7 @@ void WireFrame::updateLocation(const vec3& change) {
     if (change == vec3{0, 0, 0}) return;
 
     midpoint += change;
-    min += change;
-    max += change;
+    initialMidpoint += change;
 
     for (const auto& child : children) {
         child->updateLocation(change);
@@ -162,6 +165,7 @@ WireFrame& WireFrame::operator=(const WireFrame& obj) {
         vertices = obj.vertices;
         faces = obj.faces;
         midpoint = obj.midpoint;
+        initialMidpoint = obj.initialMidpoint;
         rotation = obj.rotation;
         rotateFlags = obj.rotateFlags;
         expired = obj.expired;
@@ -186,6 +190,7 @@ WireFrame& WireFrame::operator=(WireFrame&& obj) noexcept {
         vertices = std::move(obj.vertices);
         faces = std::move(obj.faces);
         midpoint = obj.midpoint;
+        initialMidpoint = obj.initialMidpoint;
         rotation = obj.rotation;
         rotateFlags = obj.rotateFlags;
         expired = obj.expired;
@@ -205,6 +210,7 @@ WireFrame::WireFrame(const WireFrame& obj) : AABB(obj) {
         vertices = obj.vertices;
         faces = obj.faces;
         midpoint = obj.midpoint;
+        initialMidpoint = obj.initialMidpoint;
         rotation = obj.rotation;
         rotateFlags = obj.rotateFlags;
         expired = obj.expired;
@@ -231,7 +237,7 @@ const std::vector<std::unique_ptr<WireFrame>>& WireFrame::getChildren() const { 
 // const std::weak_ptr<WireFrame>& WireFrame::getParent() const { return parent; }
 
 bool WireFrame::intersects(const std::pair<float, float>& screenCoords, const rndr::Raycast& ray) const {
-    vec3 coords = ray.project(screenCoords, min.z);
+    vec3 coords = ray.project(screenCoords, midpoint.z + min.z) - midpoint;
 
     if (AABB::intersects(coords)) return true;
 

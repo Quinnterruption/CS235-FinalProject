@@ -22,6 +22,12 @@ namespace rndr {
             z = *(list.begin() + 2);
         }
 
+        explicit vec3(float only) {
+            x = only;
+            y = only;
+            z = only;
+        }
+
         vec3& operator+=(const vec3& obj) {
             x += obj.x;
             y += obj.y;
@@ -72,10 +78,9 @@ namespace rndr {
         }
 
         static vec3 rotate(const vec3& v, Quaternion q) {
-            float magSq = q.x * q.x + q.y * q.y + q.z * q.z;
-            if (std::abs(magSq - 1.0f) > 0.000001f) {
-                q.normalize();
-            }
+            if (q == Quaternion::identity()) return v;
+
+            q.normalize();
 
             vec3 r{q.x, q.y, q.z};
             vec3 t = cross(r, v) * 2.0f;

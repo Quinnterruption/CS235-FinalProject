@@ -25,11 +25,16 @@ bool AABB::intersects(const rndr::vec3& coords) const {
             (min.z <= coords.z && max.z >= coords.z);
 }
 
-void AABB::updateMinMax(const rndr::vec3& coords) {
+void AABB::calculateMinMax(const rndr::vec3& coords) {
     if (coords.x < min.x) min.x = coords.x;
     if (coords.x > max.x) max.x = coords.x;
     if (coords.y < min.y) min.y = coords.y;
     if (coords.y > max.y) max.y = coords.y;
     if (coords.z < min.z) min.z = coords.z;
     if (coords.z > max.z) max.z = coords.z;
+}
+
+void AABB::updateMinMax(const rndr::vec3& change) {
+    min += change;
+    max += change;
 }

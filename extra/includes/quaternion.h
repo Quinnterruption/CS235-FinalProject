@@ -26,10 +26,18 @@ namespace rndr {
             return *this = *this * q;
         }
 
+        bool operator==(const Quaternion& q) const {
+            return q.x == x && q.y == y && q.z == z && q.w == w;
+        }
+
         [[nodiscard]] Quaternion conjugate() const { return {-x, -y, -z, w}; }
 
         void normalize() {
-            float len = std::sqrt(x * x + y * y + z * z + w * w);
+            float len = x * x + y * y + z * z + w * w;
+
+            if (std::abs(len - 1.0f) <= 0.000001f) return;
+
+            len = std::sqrt(len);
             if (len > 0.0f) {
                 float invLen = 1.0f / len;
                 x *= invLen;
@@ -43,6 +51,10 @@ namespace rndr {
             float halfAngle = radians / 2.0f;
             float s = std::sin(halfAngle);
             return {x * s, y * s, z * s, std::cos(halfAngle)};
+        }
+
+        static Quaternion identity() {
+            return {0.0f, 0.0f, 0.0f, 1.0f};
         }
     };
 }

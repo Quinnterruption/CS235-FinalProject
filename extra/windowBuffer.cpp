@@ -166,7 +166,7 @@ void WindowBuffer::drawTriangle(const vec3& a, const vec3& b, const vec3& c) {
     drawLine(cProjX, cProjY, aProjX, aProjY);
 }
 
-void WindowBuffer::drawWireframe(const WireFrame& wireframe, const vec3& rotateLocation) {
+void WindowBuffer::drawWireframe(const WireFrame& wireframe) {
     auto& vertices = wireframe.getVertices();
     auto& faces = wireframe.getFaces();
     const auto& location = wireframe.getLocation();
@@ -174,9 +174,12 @@ void WindowBuffer::drawWireframe(const WireFrame& wireframe, const vec3& rotateL
     unsigned int numThreads = std::thread::hardware_concurrency();
     unsigned int chunkSize = faces.size() / numThreads;
 
+    // auto projectedLoc = raycast.projectionMap(location);
+    // drawAtSafe(projectedLoc.first, projectedLoc.second, 255, 0, 0);
+
     const auto& children = wireframe.getChildren();
     for (const auto& child : children) {
-        drawWireframe(*child, rotateLocation + location - child->getLocation());
+        drawWireframe(*child);
     }
 
     std::vector<std::future<void>> futures;
@@ -185,12 +188,12 @@ void WindowBuffer::drawWireframe(const WireFrame& wireframe, const vec3& rotateL
         auto begin = faces.begin() + i * chunkSize;
         auto end = (i == numThreads - 1) ? faces.end() : begin + chunkSize;
 
-        futures.push_back(std::async(std::launch::async, [this, begin, end, &vertices, location, rotateLocation, rotation] {
-            std::for_each(begin, end, [this, &vertices, location, rotateLocation, rotation](const Triangle& face) {
+        futures.push_back(std::async(std::launch::async, [this, begin ,end, &vertices, location, rotation] {
+            std::for_each(begin, end, [this, &vertices, location, rotation](const Triangle& face) {
                 drawTriangle(
-                vec3::rotate(vertices[face[0]] - rotateLocation, rotation) + rotateLocation + location,
-                vec3::rotate(vertices[face[1]] - rotateLocation, rotation) + rotateLocation + location,
-                vec3::rotate(vertices[face[2]] - rotateLocation, rotation) + rotateLocation + location);
+                    vec3::rotate(vertices[face[0]], rotation) + location,
+                    vec3::rotate(vertices[face[1]], rotation) + location,
+                    vec3::rotate(vertices[face[2]], rotation) + location);
             });
         }));
     }

@@ -15,8 +15,8 @@ public:
 
     AABB() = default;
 
-    rndr::vec3 min{0, 0, 0};
-    rndr::vec3 max{0, 0, 0};
+    rndr::vec3 min = rndr::vec3(std::numeric_limits<float>::max());
+    rndr::vec3 max = rndr::vec3(std::numeric_limits<float>::min());
 
     AABB(const AABB& obj);
 
@@ -28,7 +28,9 @@ public:
 
     [[nodiscard]] bool intersects(const rndr::vec3& coords) const;
 
-    void updateMinMax(const rndr::vec3& coords);
+    void calculateMinMax(const rndr::vec3& coords);
+
+    void updateMinMax(const rndr::vec3& change);
 };
 
 

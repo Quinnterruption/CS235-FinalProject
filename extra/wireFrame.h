@@ -29,6 +29,7 @@ enum rotationFlags {
 class WireFrame : public AABB {
     std::vector<vec3> vertices;
     std::vector<Triangle> faces;
+    vec3 initialMidpoint{};
     vec3 midpoint{};
     Quaternion rotation{};
     int rotateFlags = 0;
@@ -73,7 +74,7 @@ public:
 
     void rotate(float deltaTime, float TPS);
 
-    void rotate(const Quaternion& q);
+    void rotate(const Quaternion& q, const vec3& center);
 
     void setRotation(const Quaternion& q);
 

@@ -333,7 +333,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     windowStuff.wireFrames.emplace_back(cubeFile);
                     parent.addChild(windowStuff.wireFrames.back());
 
-                    parent.updateLocation({0, 0, 50});
+                    parent.updateLocation({0, 0, 100});
+                    // parent.setRotation(Quaternion::fromAxisAngle(0.0f, 0.0f, 1.0f, 1.57079633f));
+                    // parent.setRotation(Quaternion::fromAxisAngle(0.0f, 0.0f, 1.0f, 1.57079633f) * Quaternion::fromAxisAngle(0.0f, 1.0f, 0.0f, 1.57079633f));
+                    // vec3 check = vec3::rotate(parent.getChildren().back()->getLocation() - parent.getLocation(), parent.getRotation()) + parent.getLocation();
+
                     windowStuff.wireFrames.back().expire();
                     LeaveCriticalSection(&vectorLock);
 

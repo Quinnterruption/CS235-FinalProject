@@ -83,7 +83,7 @@ struct WindowBuffer {
 
     void drawTriangle(const vec3& a, const vec3& b, const vec3& c);
 
-    void drawWireframe(const WireFrame& wireframe, const vec3& rotateLocation = {0, 0, 0});
+    void drawWireframe(const WireFrame& wireframe);
 
     static float getLuma(unsigned int color);
 
