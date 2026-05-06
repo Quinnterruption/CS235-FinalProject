@@ -24,6 +24,7 @@ struct WindowBuffer {
     int midScreenX = 0;
     int midScreenY = 0;
     int distToScreen = 0;
+    bool showHitboxes = false;
 
     /**
      * Adds a point and its color to the memory buffer to be rendered
@@ -83,7 +84,11 @@ struct WindowBuffer {
 
     void drawTriangle(const vec3& a, const vec3& b, const vec3& c);
 
-    void drawWireframe(const WireFrame& wireframe);
+    void drawSquare(std::pair<int, int> p1, std::pair<int, int> p2);
+
+    void showHitBox(const WireFrame& wireFrame);
+
+    void drawWireframe(const WireFrame& wireFrame);
 
     static float getLuma(unsigned int color);
 

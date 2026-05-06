@@ -25,10 +25,10 @@ namespace rndr {
             return {projectedX, projectedY};
         }
 
-        vec3 project(const std::pair<float, float>& toMap, double zCoord) const {
+        vec3 project(const std::pair<float, float>& toMap, float zCoord) const {
             vec3 coords{};
 
-            double distToObj = zCoord <= 0 ? 0.01 : zCoord;
+            float distToObj = zCoord <= 0.0f ? 0.01f : zCoord;
             coords.x = (toMap.first - midScreenX) * distToObj / distToScreen;
             coords.y = -((toMap.second - midScreenY) * distToObj / distToScreen);
             coords.z = zCoord;

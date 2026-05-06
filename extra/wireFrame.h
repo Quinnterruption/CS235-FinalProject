@@ -36,7 +36,6 @@ class WireFrame : public AABB {
     bool expired = false;
 
     // Linked List Handling
-    // std::weak_ptr<WireFrame> parent;
     std::vector<std::unique_ptr<WireFrame>> children;
 
     void setMidpoint();
@@ -52,6 +51,8 @@ public:
     WireFrame& operator=(const WireFrame& obj);
 
     WireFrame& operator=(WireFrame&& obj) noexcept;
+
+    void copy(const WireFrame& obj);
 
     /**
      * Reads an obj file and creates a WireFrame from the data
@@ -72,19 +73,17 @@ public:
 
     void toggleRotation(int axis);
 
+    void move(const vec3& change, float deltaTime, float TPS);
+
     void rotate(float deltaTime, float TPS);
 
     void rotate(const Quaternion& q, const vec3& center);
 
-    void setRotation(const Quaternion& q);
+    [[nodiscard]] const std::vector<vec3>& getVertices() const { return vertices; };
 
-    [[nodiscard]] const std::vector<vec3>& getVertices() const;
+    [[nodiscard]] const std::vector<Triangle>& getFaces() const { return faces; };
 
-    [[nodiscard]] const std::vector<Triangle>& getFaces() const;
-
-    const std::vector<std::unique_ptr<WireFrame>>& getChildren() const;
-
-    // const std::weak_ptr<WireFrame>& getParent() const;
+    const std::vector<std::unique_ptr<WireFrame>>& getChildren() const { return children; };
 
     bool intersects(const std::pair<float, float>& screenCoords, const rndr::Raycast& ray) const;
 

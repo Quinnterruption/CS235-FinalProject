@@ -166,18 +166,40 @@ void WindowBuffer::drawTriangle(const vec3& a, const vec3& b, const vec3& c) {
     drawLine(cProjX, cProjY, aProjX, aProjY);
 }
 
-void WindowBuffer::drawWireframe(const WireFrame& wireframe) {
-    auto& vertices = wireframe.getVertices();
-    auto& faces = wireframe.getFaces();
-    const auto& location = wireframe.getLocation();
-    const auto& rotation = wireframe.getRotation();
+void WindowBuffer::drawSquare(std::pair<int, int> p1, std::pair<int, int> p2) {
+    drawLine(p1.first, p1.second, p1.first, p2.second);
+    drawLine(p1.first, p2.second, p2.first, p2.second);
+    drawLine(p2.first, p2.second, p2.first, p1.second);
+    drawLine(p2.first, p1.second, p1.first, p1.second);
+}
+
+void WindowBuffer::showHitBox(const WireFrame& wireFrame) {
+    int red = r;
+    int green = g;
+    int blue = b;
+    setColor(0, 255, 255);
+
+    auto& location = wireFrame.getLocation();
+    auto projectedMin = raycast.projectionMap(vec3{wireFrame.min.x, wireFrame.min.y, wireFrame.max.z} + location);
+    auto projectedMax = raycast.projectionMap(vec3{wireFrame.max.x, wireFrame.max.y, wireFrame.max.z} + location);
+    drawSquare(projectedMin, projectedMax);
+    projectedMin = raycast.projectionMap(vec3{wireFrame.min.x, wireFrame.min.y, wireFrame.min.z} + location);
+    projectedMax = raycast.projectionMap(vec3{wireFrame.max.x, wireFrame.max.y, wireFrame.min.z} + location);
+    drawSquare(projectedMin, projectedMax);
+    setColor(red, green, blue);
+}
+
+void WindowBuffer::drawWireframe(const WireFrame& wireFrame) {
+    auto& vertices = wireFrame.getVertices();
+    auto& faces = wireFrame.getFaces();
+    const auto& location = wireFrame.getLocation();
+    const auto& rotation = wireFrame.getRotation();
     unsigned int numThreads = std::thread::hardware_concurrency();
     unsigned int chunkSize = faces.size() / numThreads;
 
-    // auto projectedLoc = raycast.projectionMap(location);
-    // drawAtSafe(projectedLoc.first, projectedLoc.second, 255, 0, 0);
+    if (showHitboxes) showHitBox(wireFrame);
 
-    const auto& children = wireframe.getChildren();
+    const auto& children = wireFrame.getChildren();
     for (const auto& child : children) {
         drawWireframe(*child);
     }

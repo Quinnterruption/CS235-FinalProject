@@ -6,6 +6,7 @@
 #define FINALPROJECT_VEC3_H
 #include <initializer_list>
 #include <stdexcept>
+#include <iostream>
 #include "quaternion.h"
 
 
@@ -91,6 +92,11 @@ namespace rndr {
             return {v.y * w.z - v.z * w.y,
                 v.z * w.x - v.x * w.z,
                 v.x * w.y - v.y * w.x};
+        }
+
+        friend std::ostream& operator<<(std::ostream& os, const vec3& v) {
+            os << "{" << v.x << ", " << v.y << ", " << v.z << "}";
+            return os;
         }
     };
 }
