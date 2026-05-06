@@ -41,6 +41,7 @@ vec3 moveVelocity{0, 0, 0};
 std::string cubeFile = R"(..\extra\base-objs\cube.obj)";
 std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
 std::string sphereFile = R"(..\extra\base-objs\sphere.obj)";
+std::string floorFile = R"(..\extra\base-objs\floor.obj)";
 std::string testFile = R"(..\extra\base-objs\test.obj)";
 std::string pyramidFile = R"(..\extra\base-objs\pyramid.obj)";
 std::vector<WireFrame*> selected;
@@ -304,6 +305,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     parent.updateLocation({0, 0, 100});
                     windowStuff.wireFrames.back().expire();
+
+                    /* Stress test max number of objects */
+                    // int floorWidth = 15;
+                    // int floorDepth = 15;
+                    // float pieceWidth = 20.0f;
+                    // auto xPos = static_cast<float>(floorWidth * 0.5) - 0.5f;
+                    // auto yPos = static_cast<float>(floorDepth * 0.5) - 0.5f;
+                    // windowStuff.wireFrames.emplace_back(floorFile);
+                    // auto& parent = windowStuff.wireFrames.back();
+                    //
+                    // #pragma omp parallel for
+                    // for (int x = 0; x < floorWidth; x++) {  // int x = -xPos; x <= floor(xPos); x++
+                    //     for (int y = 0; y < floorDepth; y++) {  // int y = -yPos; y <= floor(yPos); y++
+                    //         if (x == floor(xPos) && y == floor(yPos)) continue;   // Skip centerpiece;  // if (x == 0 && y == 0) continue;
+                    //
+                    //         WireFrame child{floorFile};
+                    //         child.updateLocation({(xPos - x) * pieceWidth, 0, (yPos - y) * pieceWidth});    // child.updateLocation({x * pieceWidth, 0, y * pieceWidth});
+                    //         parent.addChild(child);
+                    //     }
+                    // }
+                    //
+                    // parent.updateLocation({0, -15.0f * floorDepth, 2 * pieceWidth * floorDepth});
+                    // parent.rotate({0.989847004, 0, 0, 0.14213714}, parent.getLocation());
+
                     LeaveCriticalSection(&vectorLock);
 
                     break;
@@ -441,7 +466,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     std::thread renderThread(renderThreadProc);
 
     while (running) {
-        if (PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE)) {
+        if (PeekMessage(&Msg, nullptr, 0, 0, PM_REMOVE)) {
             TranslateMessage(&Msg);
             DispatchMessage(&Msg);
         }
@@ -453,5 +478,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     DeleteCriticalSection(&bufferLock);
+    DeleteCriticalSection(&vectorLock);
     return Msg.wParam;
 }

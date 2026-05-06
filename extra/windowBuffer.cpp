@@ -232,7 +232,7 @@ float WindowBuffer::getLuma(unsigned int color) {
 }
 
 void WindowBuffer::FXAA() {
-    unsigned int* pixel = reinterpret_cast<unsigned int*>(memory);
+    auto* pixel = reinterpret_cast<unsigned int*>(memory);
     int totalPixels = w * h;
 
     #pragma omp parallel for    // Enable use of all available cores
@@ -270,11 +270,11 @@ void WindowBuffer::FXAA() {
             float avgG = ((cN >> 8 & 0xFF)  + (cS >> 8 & 0xFF)  + (cE >> 8 & 0xFF)  + (cW >> 8 & 0xFF))  * 0.25f;
             float avgB = ((cN & 0xFF)       + (cS & 0xFF)       + (cE & 0xFF)       + (cW & 0xFF))       * 0.25f;
 
-            unsigned int r = static_cast<unsigned int>((1.0f - blend) * (cM >> 16 & 0xFF) + blend * avgR);
-            unsigned int g = static_cast<unsigned int>((1.0f - blend) * (cM >> 8 & 0xFF) + blend * avgG);
-            unsigned int b = static_cast<unsigned int>((1.0f - blend) * (cM & 0xFF) + blend * avgB);
+            auto red = static_cast<unsigned int>((1.0f - blend) * (cM >> 16 & 0xFF) + blend * avgR);
+            auto green = static_cast<unsigned int>((1.0f - blend) * (cM >> 8 & 0xFF) + blend * avgG);
+            auto blue = static_cast<unsigned int>((1.0f - blend) * (cM & 0xFF) + blend * avgB);
 
-            fxaaBuffer[i] = (r << 16) | (g << 8) | b;
+            fxaaBuffer[i] = (red << 16) | (green << 8) | blue;
         }
     }
     memcpy(memory, fxaaBuffer, 4 * w * h);

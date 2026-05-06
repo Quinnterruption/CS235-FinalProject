@@ -145,6 +145,7 @@ void WireFrame::updateLocation(const vec3& change) {
     midpoint += change;
     initialMidpoint += change;
 
+    #pragma omp parallel for
     for (const auto& child : children) {
         child->updateLocation(change);
     }
