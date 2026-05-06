@@ -30,10 +30,13 @@ namespace rndr {
 
         void normalize() {
             float len = std::sqrt(x * x + y * y + z * z + w * w);
-            x /= len;
-            y /= len;
-            z /= len;
-            w /= len;
+            if (len > 0.0f) {
+                float invLen = 1.0f / len;
+                x *= invLen;
+                y *= invLen;
+                z *= invLen;
+                w *= invLen;
+            }
         }
 
         static Quaternion fromAxisAngle(float x, float y, float z, float radians) {

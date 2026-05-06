@@ -34,6 +34,12 @@ namespace rndr {
             z -= obj.z;
             return *this;
         }
+        vec3& operator*=(const float& num) {
+            x *= num;
+            y *= num;
+            z *= num;
+            return *this;
+        }
         vec3 operator+(const vec3& obj) const {
             vec3 temp = *this;
             temp += obj;
@@ -42,6 +48,11 @@ namespace rndr {
         vec3 operator-(const vec3& obj) const {
             vec3 temp = *this;
             temp -= obj;
+            return temp;
+        }
+        vec3 operator*(const float& num) const {
+            vec3 temp = *this;
+            temp *= num;
             return temp;
         }
         bool operator==(const vec3& obj) const {
@@ -61,11 +72,20 @@ namespace rndr {
         }
 
         static vec3 rotate(const vec3& v, Quaternion q) {
-            Quaternion vecAsQuat(v.x, v.y, v.z, 0.0f);
-            q.normalize();
-            Quaternion qConj = q.conjugate();
-            Quaternion rotated = q * vecAsQuat * qConj;
-            return {rotated.x, rotated.y, rotated.z};
+            float magSq = q.x * q.x + q.y * q.y + q.z * q.z;
+            if (std::abs(magSq - 1.0f) > 0.000001f) {
+                q.normalize();
+            }
+
+            vec3 r{q.x, q.y, q.z};
+            vec3 t = cross(r, v) * 2.0f;
+            return v + cross(r, t) + t * q.w;
+        }
+
+        static vec3 cross(const vec3& v, const vec3& w) {
+            return {v.y * w.z - v.z * w.y,
+                v.z * w.x - v.x * w.z,
+                v.x * w.y - v.y * w.x};
         }
     };
 }
