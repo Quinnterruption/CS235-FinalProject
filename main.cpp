@@ -36,7 +36,7 @@ bool ANTI_ALIAS = false;
 constexpr char windowClassName[] = "3D-Renderer";
 constexpr int START_WIDTH = 1920, START_HEIGHT = 1080;
 constexpr float maxSpeed = 3.0f;    // Should be refactored to WireFrame
-vec3 moveDistance{0, 0, 0};
+vec3 moveVelocity{0, 0, 0};
 
 std::string cubeFile = R"(..\extra\base-objs\cube.obj)";
 std::string cylFile = R"(..\extra\base-objs\cylinder.obj)";
@@ -50,10 +50,23 @@ bool isSelected(const WireFrame& wireFrame) {
     return std::ranges::find(selected, &wireFrame) != selected.end();
 }
 
-void pressKeys() {
+/* Returns true if the key was toggled into the pressed position */
+bool toggleKey(const unsigned char key) {
+    if (windowStuff.keyPressed[key] && !windowStuff.keyPressedPrev[key]) {
+        windowStuff.keyPressedPrev[key] = true;
+        return true;
+    }
+    return false;
+}
+
+bool keyPressed(const unsigned char key) { return windowStuff.keyPressed[key]; }
+
+bool keyPressedPrev(const unsigned char key) { return windowStuff.keyPressedPrev[key]; }
+
+void keyHandling() {
     using namespace std::chrono_literals;
     if (std::chrono::steady_clock::now() - lastMove > 50ms) {
-        moveDistance = {0, 0, 0};
+        moveVelocity.z = 0;
     }
 
     if (windowStuff.keyPressed[VK_ESCAPE]) {
@@ -63,23 +76,21 @@ void pressKeys() {
         windowStuff.keyPressed[VK_ESCAPE] = false;
     }
 
-    /* Anti-Alias Toggle */
-    if (windowStuff.keyPressed['A'] && !windowStuff.keyPressedPrev['A']) {
-        windowStuff.keyPressedPrev['A'] = true;
-        if (ANTI_ALIAS) ANTI_ALIAS = false;
-        else ANTI_ALIAS = true;
-    }
+    // /* Anti-Alias Toggle */
+    // if (windowStuff.keyPressed['A'] && !windowStuff.keyPressedPrev['A']) {
+    //     windowStuff.keyPressedPrev['A'] = true;
+    //     if (ANTI_ALIAS) ANTI_ALIAS = false;
+    //     else ANTI_ALIAS = true;
+    // }
 
     /* Hitbox Toggle */
-    if (windowStuff.keyPressed['H'] && !windowStuff.keyPressedPrev['H']) {
-        windowStuff.keyPressedPrev['H'] = true;
+    if (toggleKey('H')) {
         if (!windowStuff.windowBuffer.showHitboxes) windowStuff.windowBuffer.showHitboxes = true;
         else windowStuff.windowBuffer.showHitboxes = false;
     }
 
     /* Group WireFrames */
-    if (selected.size() > 1 && windowStuff.keyPressed['G'] && !windowStuff.keyPressedPrev['G']) {
-        windowStuff.keyPressedPrev['G'] = true;
+    if (selected.size() > 1 && toggleKey('G')) {
         EnterCriticalSection(&vectorLock);
 
         auto parent = selected[0];
@@ -96,7 +107,7 @@ void pressKeys() {
     if (selected.empty()) return;
 
     for (auto& wireFrame : selected) {
-        if (windowStuff.keyPressed[VK_DELETE]) {
+        if (keyPressed(VK_DELETE)) {
             EnterCriticalSection(&vectorLock);
             wireFrame->expire();
             LeaveCriticalSection(&vectorLock);
@@ -105,37 +116,43 @@ void pressKeys() {
             continue;
         }
         // Cube movement Left/Right/Up/Down
-        if (windowStuff.keyPressed[VK_LEFT]) {
-            moveDistance.x = -maxSpeed;
-            lastMove = std::chrono::steady_clock::now();
+        if (keyPressed(VK_LEFT)) {
+            toggleKey(VK_LEFT);
+            if (moveVelocity.x > -maxSpeed) { moveVelocity.x -= maxSpeed; }
         }
-        if (windowStuff.keyPressed[VK_RIGHT]) {
-            moveDistance.x = maxSpeed;
-            lastMove = std::chrono::steady_clock::now();
+        if (keyPressed(VK_RIGHT)) {
+            toggleKey(VK_RIGHT);
+            if (moveVelocity.x < maxSpeed) { moveVelocity.x += maxSpeed; }
         }
-        if (windowStuff.keyPressed[VK_UP]) {
-            moveDistance.y = maxSpeed;
-            lastMove = std::chrono::steady_clock::now();
+        if (keyPressed(VK_UP)) {
+            toggleKey(VK_UP);
+            if (moveVelocity.y < maxSpeed) { moveVelocity.y += maxSpeed; }
         }
-        if (windowStuff.keyPressed[VK_DOWN]) {
-            moveDistance.y = -maxSpeed;
-            lastMove = std::chrono::steady_clock::now();
+        if (keyPressed(VK_DOWN)) {
+            toggleKey(VK_DOWN);
+            if (moveVelocity.y > -maxSpeed) { moveVelocity.y -= maxSpeed; }
         }
-        // Cube rotation toggles
-        // This conditional ensures that the key isn't triggered more than once
-        if (windowStuff.keyPressed['X'] && !windowStuff.keyPressedPrev['X']) {  // x
+        if ((!keyPressedPrev(VK_LEFT) && !keyPressedPrev(VK_RIGHT)) || (keyPressed(VK_LEFT) && keyPressed(VK_RIGHT))) {
+            moveVelocity.x = 0;
+        }
+        if ((!keyPressedPrev(VK_UP) && !keyPressedPrev(VK_DOWN)) || (keyPressed(VK_UP) && keyPressed(VK_DOWN))) {
+            moveVelocity.y = 0;
+        }
+        // Start the object rotating
+        if (keyPressed('X') && !keyPressedPrev('X')) {  // x
             wireFrame->toggleRotation(rotateX);
         }
-        if (windowStuff.keyPressed['Y'] && !windowStuff.keyPressedPrev['Y']) {  // y
+        if (keyPressed('Y') && !keyPressedPrev('Y')) {  // y
             wireFrame->toggleRotation(rotateY);
         }
-        if (windowStuff.keyPressed['Z'] && !windowStuff.keyPressedPrev['Z']) {  // z
+        if (keyPressed('Z') && !keyPressedPrev('Z')) {  // z
             wireFrame->toggleRotation(rotateZ);
         }
     }
-    if (windowStuff.keyPressed['X']) windowStuff.keyPressedPrev['X'] = true;
-    if (windowStuff.keyPressed['Y']) windowStuff.keyPressedPrev['Y'] = true;
-    if (windowStuff.keyPressed['Z']) windowStuff.keyPressedPrev['Z'] = true;
+    // Toggle the keys
+    if (keyPressed('X')) toggleKey('X');
+    if (keyPressed('Y')) toggleKey('Y');
+    if (keyPressed('Z')) toggleKey('Z');
 }
 
 void renderThreadProc() {
@@ -165,7 +182,7 @@ void renderThreadProc() {
 
             wireFrame.rotate(deltaTime, TPS);
             if (isSelected(wireFrame)) {
-                wireFrame.move(moveDistance, deltaTime, TPS);
+                wireFrame.move(moveVelocity, deltaTime, TPS);
                 // Change to blue
                 windowStuff.windowBuffer.setColor(0, 0, 255);
             }
@@ -175,9 +192,6 @@ void renderThreadProc() {
             // Reset to green
             windowStuff.windowBuffer.setColor(0, 255, 0);
             LeaveCriticalSection(&bufferLock);
-            // if (windowStuff.playback.recording()) {
-            //     windowStuff.playback.update(wireFrame);
-            // }
         }
 
         /* Remove expired wireFrames */
@@ -242,42 +256,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             EndPaint(hwnd, &ps);
             break;
         }
-        /* Doesn't Work Right
-        case WM_CREATE: {
-            HMENU hMenu, hSubMenu;
-            HICON hIcon, hIconSm;
-
-            hMenu = CreateMenu();
-            AppendMenu(hSubMenu, MF_STRING, ID_FILE_EXIT, "E&xit");
-            AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hSubMenu, "&File");
-
-            hSubMenu = CreatePopupMenu();
-            AppendMenu(hSubMenu, MF_STRING, ID_STUFF_GO, "&Go");
-            AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hSubMenu, "&Stuff");
-
-            SetMenu(hwnd, hMenu);
-
-            hIcon = LoadImage(NULL, "menu_two.ico", IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
-            if (hIcon) {
-                SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-            } else {
-                MessageBox(hwnd, "Could not load large icon!", "Error", MB_OK | MB_ICONERROR);
-            }
-
-            hIconSm = LoadImage(NULL, "menu_two.ico", IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
-            if (hIconSm) {
-                SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
-            } else {
-                MessageBox(hwnd, "Could not load small icon!", "Error", MB_OK | MB_ICONERROR);
-            }
-            break;
-        }
-        */
         // Menu bar handling
         case WM_COMMAND: {
             switch(LOWORD(wParam)) {
                 case ID_FILE_NEW_CUBE: {
-                    // DialogBox(nullptr, MAKEINTRESOURCE(IDD_MYDIALOG), hwnd, (DLGPROC)DeleteItemProc);
                     EnterCriticalSection(&vectorLock);
                     windowStuff.wireFrames.emplace_back(cubeFile);
                     windowStuff.wireFrames.back().updateLocation({0, 0, 50});
@@ -367,9 +349,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_MOUSEWHEEL: {
             short delta = GET_WHEEL_DELTA_WPARAM(wParam);
             if (delta > 0) {
-                moveDistance.z = -12.0f;
+                moveVelocity.z = -12.0f;
             } else if (delta < 0) {
-                moveDistance.z = 12.0f;
+                moveVelocity.z = 12.0f;
             }
             lastMove = std::chrono::steady_clock::now();
             break;
@@ -382,7 +364,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             bool noHits = true;
             for (auto& wireFrame : windowStuff.wireFrames) {
                 if (wireFrame.intersects({xPos, yPos}, windowStuff.windowBuffer.raycast)) {
-                    if (selected.size() == 0 || windowStuff.keyPressed[VK_SHIFT]) {
+                    if (selected.empty() || windowStuff.keyPressed[VK_SHIFT]) {
                         selected.emplace_back(&wireFrame);
                     } else {
                         selected[0] = &wireFrame;
@@ -463,7 +445,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             TranslateMessage(&Msg);
             DispatchMessage(&Msg);
         }
-        pressKeys();
+        keyHandling();
     }
 
     if (renderThread.joinable()) {

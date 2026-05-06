@@ -6,11 +6,13 @@ Open a `.rndr` file with the program to play back the saved recording
 | Input                       | Description                                 |
 |-----------------------------|---------------------------------------------|
 | `esc`                       | Closes the program                          |
+| `h`                         | Toggle hitboxes                             |
+| `left click`                | Select object                               |
+| Shift + `left click`        | Select multiple objects                     |
+| `g`                         | Group selected objects                      |
 | `x`/`y`/`z`                 | Toggles rotation about the `x`/`y`/`z`-axis |
 | `←`/`→`/`↑`/`↓`             | Moves object `left`/`right`/`up`/`down`     |
 | Scroll `Forward`/`Backward` | Moves object `forwards`/`backwards`         |
-| `left click`                | Select object                               |
-| Shift + `left click`        | Select multiple objects                     |
 
 Additionally, press G while multi-selecting to group them and select a parent for the selected objects
 
