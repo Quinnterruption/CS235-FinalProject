@@ -73,6 +73,8 @@ public:
 
     void toggleRotation(int axis);
 
+    void applyRotation(const Quaternion& rotation, const vec3& location);
+
     void move(const vec3& change, float deltaTime, float TPS);
 
     void rotate(float deltaTime, float TPS);

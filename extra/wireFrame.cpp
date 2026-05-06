@@ -156,14 +156,29 @@ void WireFrame::addChild(const WireFrame& child) {
     children.emplace_back(std::make_unique<WireFrame>(child));
 
     auto& childptr = children.back();
+    childptr->applyRotation(rotation, midpoint);
     // Find change from childptr's rotation to rotation
-    Quaternion change = rotation.conjugate() * childptr->rotation;
-    for (auto& vec : childptr->vertices) {
-        vec = vec3::rotate(vec, change);
+    // Quaternion change = rotation.conjugate() * childptr->rotation;
+    // for (auto& vec : childptr->vertices) {
+    //     vec = vec3::rotate(vec, change);
+    // }
+    //
+    // childptr->initialMidpoint = vec3::rotate(childptr->midpoint - midpoint, rotation.conjugate()) + midpoint;
+    // childptr->rotation = rotation;
+}
+
+
+void WireFrame::applyRotation(const Quaternion& matchRotation, const vec3& matchLocation) {
+    for (auto& child : children) {
+        child->applyRotation(matchRotation, matchLocation);
     }
 
-    childptr->initialMidpoint = vec3::rotate(childptr->midpoint - midpoint, rotation.conjugate()) + midpoint;
-    childptr->rotation = rotation;
+    Quaternion change = matchRotation.conjugate() * rotation;
+    for (auto& vec : vertices) {
+        vec = vec3::rotate(vec, change);
+    }
+    initialMidpoint = vec3::rotate(midpoint - matchLocation, matchRotation.conjugate()) + matchLocation;
+    rotation = matchRotation;
 }
 
 
