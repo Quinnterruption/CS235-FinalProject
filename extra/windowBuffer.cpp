@@ -177,13 +177,16 @@ void WindowBuffer::showHitBox(const WireFrame& wireFrame) {
     int red = r;
     int green = g;
     int blue = b;
-    setColor(0, 255, 255);
 
     auto& location = wireFrame.getLocation();
+    auto projectedLoc = raycast.projectionMap(location);
+    drawAtSafe(projectedLoc.first, projectedLoc.second, 255, 0, 0);
+
+    setColor(0, 255, 255);
     auto projectedMin = raycast.projectionMap(vec3{wireFrame.min.x, wireFrame.min.y, wireFrame.max.z} + location);
-    auto projectedMax = raycast.projectionMap(vec3{wireFrame.max.x, wireFrame.max.y, wireFrame.max.z} + location);
+    auto projectedMax = raycast.projectionMap(wireFrame.max + location);
     drawSquare(projectedMin, projectedMax);
-    projectedMin = raycast.projectionMap(vec3{wireFrame.min.x, wireFrame.min.y, wireFrame.min.z} + location);
+    projectedMin = raycast.projectionMap(wireFrame.min + location);
     projectedMax = raycast.projectionMap(vec3{wireFrame.max.x, wireFrame.max.y, wireFrame.min.z} + location);
     drawSquare(projectedMin, projectedMax);
     setColor(red, green, blue);
