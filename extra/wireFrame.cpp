@@ -156,10 +156,9 @@ void WireFrame::addChild(const WireFrame& child) {
 
     auto& childptr = children.back();
     // Find change from childptr's rotation to rotation
-    // Quaternion change = childptr->rotation * rotation.conjugate();
-    Quaternion change = childptr->rotation.conjugate() * rotation;
+    Quaternion change = rotation.conjugate() * childptr->rotation;
     for (auto& vec : childptr->vertices) {
-        vec = vec3::rotate(vec, change.conjugate());
+        vec = vec3::rotate(vec, change);
     }
 
     childptr->initialMidpoint = vec3::rotate(childptr->midpoint - midpoint, rotation.conjugate()) + midpoint;
