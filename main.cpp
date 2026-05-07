@@ -312,16 +312,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     // float pieceWidth = 20.0f;
                     // auto xPos = static_cast<float>(floorWidth * 0.5) - 0.5f;
                     // auto yPos = static_cast<float>(floorDepth * 0.5) - 0.5f;
+                    //
                     // windowStuff.wireFrames.emplace_back(floorFile);
                     // auto& parent = windowStuff.wireFrames.back();
+                    // parent.reserve(floorWidth * floorDepth);
                     //
                     // #pragma omp parallel for
-                    // for (int x = 0; x < floorWidth; x++) {  // int x = -xPos; x <= floor(xPos); x++
-                    //     for (int y = 0; y < floorDepth; y++) {  // int y = -yPos; y <= floor(yPos); y++
-                    //         if (x == floor(xPos) && y == floor(yPos)) continue;   // Skip centerpiece;  // if (x == 0 && y == 0) continue;
+                    // for (int x = static_cast<int>(-xPos); x <= static_cast<int>(xPos); x++) {
+                    //     for (int y = static_cast<int>(-yPos); y <= static_cast<int>(yPos); y++) {
+                    //         if (x == 0 && y == 0) continue;
                     //
                     //         WireFrame child{floorFile};
-                    //         child.updateLocation({(xPos - x) * pieceWidth, 0, (yPos - y) * pieceWidth});    // child.updateLocation({x * pieceWidth, 0, y * pieceWidth});
+                    //         child.updateLocation({x * pieceWidth, 0, y * pieceWidth});
                     //         parent.addChild(child);
                     //     }
                     // }
@@ -395,6 +397,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         selected[0] = &wireFrame;
                     }
                     noHits = false;
+                    break;
                 }
             }
             if (noHits) {

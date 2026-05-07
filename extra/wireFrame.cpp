@@ -224,7 +224,13 @@ void WireFrame::copy(const WireFrame& obj) {
 }
 
 // Add move constructor?
-// WireFrame::WireFrame(WireFrame&& obj) noexcept : vertices(std::move(obj.vertices))
+WireFrame::WireFrame(WireFrame&& obj) noexcept
+    : AABB(obj), vertices(std::move(obj.vertices)), faces(std::move(obj.faces)), initialMidpoint(obj.initialMidpoint),
+    midpoint(obj.midpoint), rotation(obj.rotation), rotateFlags(obj.rotateFlags), expired(obj.expired) {
+
+    children.reserve(obj.children.size());
+    children = std::move(obj.children);
+}
 
 
 WireFrame::WireFrame(const WireFrame& obj) : AABB(obj) {

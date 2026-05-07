@@ -54,6 +54,8 @@ public:
 
     void copy(const WireFrame& obj);
 
+    WireFrame(WireFrame&& obj) noexcept;
+
     /**
      * Reads an obj file and creates a WireFrame from the data
      * @param fileName the obj file to read from
@@ -81,11 +83,13 @@ public:
 
     void rotate(const Quaternion& q, const vec3& center);
 
-    [[nodiscard]] const std::vector<vec3>& getVertices() const { return vertices; };
+    [[nodiscard]] const std::vector<vec3>& getVertices() const { return vertices; }
 
-    [[nodiscard]] const std::vector<Triangle>& getFaces() const { return faces; };
+    [[nodiscard]] const std::vector<Triangle>& getFaces() const { return faces; }
 
-    const std::vector<std::unique_ptr<WireFrame>>& getChildren() const { return children; };
+    const std::vector<std::unique_ptr<WireFrame>>& getChildren() const { return children; }
+
+    void reserve(unsigned int amount) { children.reserve(amount); }
 
     bool intersects(const std::pair<float, float>& screenCoords, const rndr::Raycast& ray) const;
 

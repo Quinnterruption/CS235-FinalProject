@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_EXE_LINKER_FLAGS "--static")
 
+set(CMAKE_BUILD_TYPE Debug)
+
 
 find_package(OpenMP REQUIRED)
 
